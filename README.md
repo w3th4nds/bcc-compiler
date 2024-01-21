@@ -1,5 +1,11 @@
 # BCC - Bad C Compiler
 
+Building a basic C compiler, for educational purposes and bragging rights.
+
+The goal is to compile basic programs, "#include"'s, typedefs and other fancy things are forbidden.
+
+Will not compile itself. Unless things get out of hand.
+
 Work in progress
 
 ```
