@@ -4,6 +4,7 @@
 #include "include/parser.h"
 #include "include/util.h"
 #include "include/debug.h"
+#include "include/asm_gen.h"
 #include <stdlib.h>
 
 char *bcc_read_file(char *fname)
@@ -34,6 +35,7 @@ void bcc_compile(char *src)
   // parse AST
   AST_t *root = parser_parse(parser);
   if (SCOPE_DEBUG) print_scopes(scope_manager);
+  char *assembly = asm_generate(root);
   //create_ast_file(root);
   printf("[ SUCCESS ]\n");
 }
