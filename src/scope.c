@@ -1,5 +1,30 @@
 #include "include/scope.h"
 
+/*
+
+  Scope Manager structure:
+  --
+  A hashmap holds the symtab for each given scope
+  "current_scope_id" points to the function id currently being parsed
+
+  Buckets are the hashmap entries that hold:
+  - the id (function name)
+  - the function return type
+  - the function parameters and their types
+  - the scope's symtab
+
+  A Symtab is a list of SymtabEntries, and each of them holds:
+  - the variable type
+  - the variable's size in bytes
+  - the variable's offset on the stack (or the .data section for globals)
+  - the variable's name
+  - the variable's scope (even though not necessary so far)
+
+  A linked list is built in case of hash collisions
+  Index 0 of the hashmap is reserved for the global scope
+
+*/
+
 ScopeManager_t *init_scope_manager(void)
 {
   ScopeManager_t *scope_manager = calloc(1, sizeof(ScopeManager_t));

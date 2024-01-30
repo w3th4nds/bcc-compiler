@@ -1,27 +1,5 @@
 #include "include/hashmap.h"
 
-/*
-  Scope Manager structure:
-  --
-  A hashmap holds the symtab for each given scope
-  Buckets are the hashmap entries that hold:
-  - the id (function name)
-  - the function return type
-  - the function parameters and their types
-  - the scope's symtab
-
-  A Symtab is a list of SymtabEntries, and each of them holds:
-  - the variable type
-  - the variable's size in bytes
-  - the variable's offset on the stack (or the .data section for globals)
-  - the variable's name
-  - the variable's scope (even though not necessary)
-
-  A linked list is built in case of hash collisions
-  Index 0 is reserved for the global scope
-*/
-
-
 int gethash(char *id)
 {
   // index 0 reserved for global scope
