@@ -6,6 +6,10 @@ The goal is to compile basic programs, "#include"'s, typedefs and other fancy th
 
 Will not compile itself. Unless things get out of hand.
 
+```
+SHOW_SOURCE=0 DEBUG=ASM ./bcc examples/simple.c && ./build.sh
+```
+
 Work in progress
 
 ```
