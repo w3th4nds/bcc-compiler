@@ -1,5 +1,27 @@
 #include "include/hashmap.h"
 
+/*
+  Scope Manager structure:
+  --
+  A hashmap holds the symtab for each given scope
+  Buckets are the hashmap entries that hold:
+  - the id (function name)
+  - the function return type
+  - the function parameters and their types
+  - the scope's symtab
+
+  A Symtab is a list of SymtabEntries, and each of them holds:
+  - the variable type
+  - the variable's size in bytes
+  - the variable's offset on the stack (or the .data section for globals)
+  - the variable's name
+  - the variable's scope (even though not necessary)
+
+  A linked list is built in case of hash collisions
+  Index 0 is reserved for the global scope
+*/
+
+
 int gethash(char *id)
 {
   // index 0 reserved for global scope
@@ -38,7 +60,9 @@ void hashmap_add(Bucket_t **hashmap, char *scope_id, SymtabEntry_t *symtab_entry
       bucket = bucket->next;
     }
   }
-  list_push(bucket->symtab, symtab_entry);
+  symtab_entry->offset = bucket->symtab->offset;
+  bucket->symtab->offset += symtab_entry->size;
+  list_push(bucket->symtab->list, symtab_entry);
 }
 
 void hashmap_add_specs(Bucket_t **hashmap, char *scope_id, int type, List_t *params)
@@ -84,3 +108,29 @@ void hashmap_set(Bucket_t **hashmap, char *scope_id)
   }
 }
 
+Bucket_t *hashmap_getitem(Bucket_t **hashmap, char *scope_id)
+{
+  int key = gethash(scope_id);
+  if (key == 0) return hashmap[0];
+  Bucket_t *bucket = hashmap[key];
+  for (;;) {
+    if (bucket == NULL) break;
+    if (strcmp(bucket->scope_id, scope_id) == 0) return bucket;
+    bucket = bucket->next;
+  }
+  error_exit("hashmap_getitem() - scope_id not found\n");
+  return NULL;
+}
+
+List_t *hashmap_get_all_ids(Bucket_t **hashmap)
+{
+  List_t *ids = init_list(sizeof(char *));
+  for (int i = 1; i < HASHMAP_SZ; ++i) {
+    Bucket_t *bucket = hashmap[i];
+    while (bucket != NULL) {
+      list_push(ids, bucket->scope_id);
+      bucket = bucket->next;
+    }
+  }
+  return ids;
+}

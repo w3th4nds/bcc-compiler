@@ -1,28 +1,36 @@
 #include "include/symtab.h"
 
-List_t *init_symtab(void)
-{
-  List_t *symtab = init_list(sizeof(SymtabEntry_t *));
-  return symtab;
-}
-
 SymtabEntry_t *init_symtab_entry(int type, char *name, char *scope_id)
 {
   SymtabEntry_t *symtab_entry = calloc(1, sizeof(SymtabEntry_t));
   symtab_entry->type = type;
+  symtab_entry->size = type_size(type);
+  symtab_entry->offset = 0;
   symtab_entry->name = name;
   symtab_entry->scope_id = scope_id;
   return symtab_entry;
 }
 
-void print_symtab(List_t *symtab)
+Symtab_t *init_symtab(void)
 {
-  printf("#########################################################\n");
-  for (int i = 0; i < symtab->size; ++i) {
-    SymtabEntry_t *entry = symtab->items[i];
-    printf("[\t%s\t|\t%s\t|\t%s\t]\n",
+  Symtab_t *symtab = calloc(1, sizeof(Symtab_t));
+  symtab->offset = 0;
+  symtab->list = init_list(sizeof(SymtabEntry_t *));
+  return symtab;
+}
+
+void print_symtab(Symtab_t *symtab)
+{
+  int pad = 0;
+  for (int i = 0; i < symtab->list->size; ++i) {
+    for (int j = 0; j < pad; ++j) putchar('-');
+    putchar('\n');
+    SymtabEntry_t *entry = symtab->list->items[i];
+    printf("[ %-15s | %-12s | sz: %ld | off: 0x%-2lx ]%n\n",
            entry->name,
            type_to_str(entry->type),
-           entry->scope_id);
+           entry->size,
+           entry->offset,
+           &pad);
   }
 }

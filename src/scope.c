@@ -31,9 +31,14 @@ void scope_add_to_symtab(ScopeManager_t *scope_manager, int type, char *name)
   hashmap_add(scope_manager->scopes, scope_manager->current_scope_id, symtab_entry);
 }
 
+// specify function return type
+// and the parameters the current function
 void scope_add_specs(ScopeManager_t *scope_manager, int type, List_t *params)
 {
-  hashmap_add_specs(scope_manager->scopes, scope_manager->current_scope_id, type, params);
+  if (hashmap_key_exists(scope_manager->scopes, scope_manager->current_scope_id))
+    hashmap_add_specs(scope_manager->scopes, scope_manager->current_scope_id, type, params);
+  else 
+    error_exit("scope_add_specs() - current scope does not exist in hashmap\n");
 }
 
 void print_scopes(ScopeManager_t *scope_manager)

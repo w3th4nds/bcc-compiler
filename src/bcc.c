@@ -10,18 +10,24 @@
 char *bcc_read_file(char *fname)
 {
   FILE *file;
-  if ((file = fopen(fname, "r")) == NULL) {
-    printf("Error opening input file.\n");
-    exit(1);
-  }
+  if ((file = fopen(fname, "r")) == NULL)
+    error_exit("Error opening input file.\n");
   fseek(file, 0, SEEK_END);
   long file_size = ftell(file);
   fseek(file, 0, SEEK_SET);
   //printf("Source file size = %ld bytes\n", file_size);
   char *src = calloc(1, file_size+1);
-  fread(src, 1, file_size+1, file);
+  fread(src, sizeof(char), file_size+1, file);
   fclose(file);
   return src;
+}
+
+void bcc_write_asm(char *outname, char *generated_asm)
+{
+  FILE *file;
+  if ((file = fopen(outname, "w")) == NULL)
+    error_exit("Error opening output file.\n");
+  fwrite(generated_asm, sizeof(char), strlen(generated_asm)+1, file);
 }
 
 void bcc_compile(char *src)
@@ -35,8 +41,10 @@ void bcc_compile(char *src)
   // parse AST
   AST_t *root = parser_parse(parser);
   if (SCOPE_DEBUG) print_scopes(scope_manager);
-  char *assembly = asm_generate(root);
-  //create_ast_file(root);
+  char *generated_assembly = asm_generate(scope_manager, root);
+  if (ASM_DEBUG) printf("\nGenerated ASM =\n%s\n", generated_assembly);
+  bcc_write_asm("out.s", generated_assembly);
+
   printf("[ SUCCESS ]\n");
 }
 

@@ -30,6 +30,7 @@ size_t type_size(int type)
     case NO_TYPE:
     default:          error_exit("type_size - request for NO_TYPE / non implemented type\n");
   }
+  return 0;
 }
 
 // does not fully belong in types, but w/e

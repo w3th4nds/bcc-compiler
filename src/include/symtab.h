@@ -7,12 +7,19 @@
 
 typedef struct {
   int type;
+  size_t size;
+  size_t offset;
   char *name;
   char *scope_id;
 } SymtabEntry_t;
 
-List_t *init_symtab(void);
+typedef struct {
+  unsigned int offset;
+  List_t *list;
+} Symtab_t;
+
+Symtab_t *init_symtab(void);
 SymtabEntry_t *init_symtab_entry(int type, char *name, char *scope_id);
-void print_symtab(List_t *symtab);
+void print_symtab(Symtab_t *symtab);
 
 #endif

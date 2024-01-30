@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-FNAME = 'return_template'
+FNAME = 'funcdef_template'
 TEMPLATE = '''"\
-mov rax, %d\\n\\
-pop rbp\\n\\
-ret\\n\\
+%s:\\n\\
+push rbp\\n\\
+mov rbp, rsp\\n\\
+sub rsp, %d\\n\
 "'''
 
 header = f'_{FNAME.upper()}_H_'
