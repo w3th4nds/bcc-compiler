@@ -23,8 +23,6 @@ bool binop_iscomputable(AST_t *node)
 int binop_evaluate_(AST_t *node)
 {
   switch (node->node_type) {
-    case AST_NUM:
-      return node->num_value;
     case AST_BINOP:
       if (node->op == TOKEN_PLUS)
         return binop_evaluate_(node->left) + binop_evaluate_(node->right);
@@ -34,6 +32,9 @@ int binop_evaluate_(AST_t *node)
         return binop_evaluate_(node->left) * binop_evaluate_(node->right);
       if (node->op == TOKEN_DIV)
         return binop_evaluate_(node->left) / binop_evaluate_(node->right);
+    case AST_NUM:
+      printf("astnum = %d\n", node->num_value);
+      return node->num_value;
     default:
       error_exit("binop_evaluate_() - default reached\n");
   }

@@ -27,7 +27,7 @@ void bcc_write_asm(char *outname, char *generated_asm)
   FILE *file;
   if ((file = fopen(outname, "w")) == NULL)
     error_exit("Error opening output file.\n");
-  fwrite(generated_asm, sizeof(char), strlen(generated_asm)+1, file);
+  fwrite(generated_asm, sizeof(char), strlen(generated_asm), file);
 }
 
 void bcc_compile(char *src)

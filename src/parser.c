@@ -192,7 +192,8 @@ AST_t *parser_parse_factor(Parser_t *parser)
 AST_t *parser_parse_term(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_term()\n");
-  AST_t *ast_left = parser_parse_factor(parser);
+  AST_t *ast_left;
+  ast_left = parser_parse_factor(parser);
   while (parser->token->kind == TOKEN_MUL || parser->token->kind == TOKEN_DIV) {
     AST_t *ast_binop = init_ast(AST_BINOP);
     ast_binop->left = ast_left;
@@ -208,15 +209,8 @@ AST_t *parser_parse_expr(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_expr()\n");
   AST_t *ast_left;
-  if (parser->token->kind == TOKEN_LP) {
-    parser_eat(parser, TOKEN_LP);
-    ast_left = parser_parse_expr(parser);
-  }
-  else {
-    ast_left = parser_parse_term(parser);
-  }
-  while (parser->token->kind == TOKEN_PLUS || parser->token->kind == TOKEN_MINUS || parser->token->kind == TOKEN_RP) {
-    if (parser->token->kind == TOKEN_RP) parser_eat(parser, TOKEN_RP);
+  ast_left = parser_parse_term(parser);
+  while (parser->token->kind == TOKEN_PLUS || parser->token->kind == TOKEN_MINUS) {
     AST_t *ast_binop = init_ast(AST_BINOP);
     ast_binop->left = ast_left;
     ast_binop->op = parser->token->kind;
