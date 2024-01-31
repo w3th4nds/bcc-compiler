@@ -45,3 +45,12 @@ bool is_assign_op(int token_kind)
       token_kind == TOKEN_MODEQUALS) return true;
   return false;
 }
+
+bool is_binop_op(int token_kind)
+{
+  if (token_kind == TOKEN_PLUS || \
+      token_kind == TOKEN_MINUS || \
+      token_kind == TOKEN_MUL || \
+      token_kind == TOKEN_DIV) return true;
+  return false;
+}

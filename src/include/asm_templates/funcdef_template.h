@@ -4,9 +4,8 @@
 #define funcdef_template_asm \
 "%s:\n\
 push rbp\n\
-mov rbp, rsp\n\
-sub rsp, %d\n"
+mov rbp, rsp\n"
 
-#define funcdef_template_sz 50
+#define funcdef_template_sz 35
 
 #endif

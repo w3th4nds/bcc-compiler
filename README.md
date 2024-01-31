@@ -12,8 +12,24 @@ SHOW_SOURCE=0 DEBUG=ASM ./bcc examples/simple.c && ./build.sh
 
 Work in progress
 
+Notes:
+
 ```
+Q: Why is there no "sub rsp, X" in all my functions, even though local variables are declared ?
+
+A: The System V ABI for x86-64 specifies a red zone of 128 bytes below %rsp. These 128 bytes belong to the function as long as it doesn't call any other function (it is a leaf function).
+
+Signal handlers (and functions called by a debugger) need to respect the red zone, since they are effectively involuntary function calls.
+All of the local variables of your test_function, which is a leaf function, fit into the red zone, thus no adjustment of %rsp is needed. (Also, the function has no visible side-effects and would be optimized out on any reasonable optimization setting).
+
+You can compile with -mno-red-zone to stop the compiler from using space below the stack pointer. Kernel code has to do this because hardware interrupts don't implement a red-zone.
+
+--
+
 TODO:
+
+**** remove params from symtabs
+**** add unary operator support
 
 next up - assembly generation
 

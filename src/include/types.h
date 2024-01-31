@@ -18,5 +18,6 @@ int match_type(int token_kind);
 char *type_to_str(int type);
 size_t type_size(int type);
 bool is_assign_op(int token_kind);
+bool is_binop_op(int token_kind);
 
 #endif
