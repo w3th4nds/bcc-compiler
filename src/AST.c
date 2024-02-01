@@ -12,13 +12,10 @@ AST_t *init_ast(int node_type)
     case AST_RETURN:
       ast->name = "AST_RETURN";
       break;
-    case AST_FUNCTION:
-      break;
     case AST_CALL:
       ast->children = init_list(sizeof(AST_t *));
       break;
     default:
-      ast->name = NULL;
   }
   return ast;
 }
@@ -26,17 +23,18 @@ AST_t *init_ast(int node_type)
 char *AST_type_to_str(int node_type)
 {
   switch (node_type) {
-    case AST_COMPOUND:        return "AST_COMPOUND";
+    case AST_NUM:             return "AST_NUM";
+    case AST_ID:              return "AST_ID";
+    case AST_DECL:            return "AST_DECL";
     case AST_FUNCTION:        return "AST_FUNCTION";
     case AST_CALL:            return "AST_CALL";
-    case AST_SPECS:           return "AST_SPECS";
-    case AST_DECL:            return "AST_DECL";
     case AST_ASSIGNMENT:      return "AST_ASSIGNMENT";
     case AST_RETURN:          return "AST_RETURN";
     case AST_BINOP:           return "AST_BINOP";
-    case AST_NUM:             return "AST_NUM";
-    case AST_ID:              return "AST_ID";
-    default:                  return "AST_type_to_str(): type not implemented";
+    case AST_COMPOUND:        return "AST_COMPOUND";
+    default:                  
+      printf("type = %d\n", node_type);
+      return "AST_type_to_str(): type not implemented";
   }
 }
 

@@ -25,6 +25,7 @@ void lexer_skip_line(Lexer_t *lexer);
 void lexer_skip_to_comment_end(Lexer_t *lexer);
 Token_t *lexer_parse_id(Lexer_t *lexer);
 Token_t *lexer_parse_num(Lexer_t *lexer);
+Token_t *lexer_parse_hex(Lexer_t *lexer);
 Token_t *lexer_next_token(Lexer_t *lexer);
 Token_t *lexer_advance_with(Lexer_t *lexer, Token_t *token);
 Token_t *lexer_advance_current(Lexer_t *lexer, int kind);

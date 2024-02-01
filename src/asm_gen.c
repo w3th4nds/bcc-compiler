@@ -140,7 +140,7 @@ char *asm_assignment(AsmCtx_t *ctx)
     case 1: assign_template = "mov byte [rbp-0x%x], 0x%x\n";  break;
     case 2: assign_template = "mov word [rbp-0x%x], 0x%x\n";  break;
     case 4: assign_template = "mov dword [rbp-0x%x], 0x%x\n"; break;
-    case 8: assign_template = "mov qword [rbp-0x%x], 0x%x\n"; break;
+    case 8: assign_template = "mov qword [rbp-0x%x], 0x%lx\n"; break;
     default: error_exit("asm_assignment() - size check default reached\n");
   }
 

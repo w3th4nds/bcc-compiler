@@ -108,8 +108,23 @@ Token_t *lexer_parse_num(Lexer_t *lexer)
   value[0] = lexer->c;
   value[1] = '\0';
   int off = 1;
-  char lookahead = lexer_peek(lexer, off);;
+  char lookahead = lexer_peek(lexer, off);
   while (isdigit(lookahead)) {
+    value = realloc(value, (strlen(value)+2) * sizeof(char));
+    strcat(value, (char[]){lookahead, 0});
+    lookahead = lexer_peek(lexer, ++off);
+  }
+  return init_token(value, TOKEN_NUM);
+}
+
+Token_t *lexer_parse_hex(Lexer_t *lexer)
+{
+  char *value = calloc(3, sizeof(char));
+  value[0] = lexer->c;
+  value[1] = lexer_peek(lexer, 1);
+  int off = 2;
+  char lookahead = lexer_peek(lexer, off);
+  while (isxdigit(lookahead)) {
     value = realloc(value, (strlen(value)+2) * sizeof(char));
     strcat(value, (char[]){lookahead, 0});
     lookahead = lexer_peek(lexer, ++off);
@@ -139,6 +154,9 @@ Token_t *lexer_next_token(Lexer_t *lexer)
   while (lexer->c != '\0') {
     lexer_skip_whitespace(lexer);
     if (isalpha(lexer->c) || lexer->c == '_') return lexer_advance_with(lexer, lexer_parse_id(lexer));
+    // TODO: make this prettier
+    // special case for hex numbers 
+    if (lexer->c == '0' && lexer_peek(lexer, 1) == 'x') return lexer_advance_with(lexer, lexer_parse_hex(lexer));
     if (isdigit(lexer->c)) return lexer_advance_with(lexer, lexer_parse_num(lexer));
     char lookahead = lexer_peek(lexer, 1);
     switch (lexer->c) {

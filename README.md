@@ -24,13 +24,15 @@ Source Code:
 int main(void)
 {
   int a = 3;
+  long c = 5;
   int b = 4;
-  return 3 * 5 + 9;
+  return 3 * (5 + 9 * (4 + 3));
 }
 
 Setting scope -> global
 Setting scope -> "main"
 Current_scope: main - adding: "a" TYPE_INT
+Current_scope: main - adding: "c" TYPE_LONG
 Current_scope: main - adding: "b" TYPE_INT
 
 Global scope:
@@ -42,17 +44,19 @@ Return type: TYPE_INT
 Params: (TYPE_VOID (null))
 Symtab:
 
-[ a               | TYPE_INT     | sz: 4 | off: 0x0  ]
+[ a               | TYPE_INT     | sz: 4 | off: 0x4  ]
 ------------------------------------------------------
-[ b               | TYPE_INT     | sz: 4 | off: 0x4  ]
+[ c               | TYPE_LONG    | sz: 8 | off: 0x10 ]
+------------------------------------------------------
+[ b               | TYPE_INT     | sz: 4 | off: 0x14 ]
 ---
 asm_generate()
 asm_func_def()
 Setting scope -> "main"
 asm_assignment
 asm_assignment
+asm_assignment
 asm_return()
-
 Generated ASM =
 global main
 
@@ -61,16 +65,17 @@ section .text
 main:
 push rbp
 mov rbp, rsp
-mov dword [rbp-4], 3
-mov dword [rbp-8], 4
-mov rax, 24
+mov dword [rbp-0x4], 0x3
+mov qword [rbp-0x10], 0x5
+mov dword [rbp-0x14], 0x4
+mov rax, 0xcc
 pop rbp
 ret
-
 [ SUCCESS ]
 [*] Building asm into executable...
 [*] Running it and checking the return value
-24
+204
+
 ```
 
 
@@ -90,6 +95,7 @@ You can compile with -mno-red-zone to stop the compiler from using space below t
 
 TODO:
 
+**** clean up lexer - repeating code
 **** remove params from symtabs
 **** add unary operator support
 

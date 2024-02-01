@@ -81,7 +81,7 @@ AST_t *parser_parse_num(Parser_t *parser)
   char *value = parser_get_value(parser);
   parser_eat(parser, TOKEN_NUM);
   AST_t *ast = init_ast(AST_NUM);
-  ast->num_value = atoi(value);
+  ast->num_value = strncasecmp(value, "0x", 2) == 0 ? strtol(value, NULL, 16) : atoi(value);
   return ast;
 }
 

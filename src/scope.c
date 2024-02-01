@@ -20,6 +20,8 @@
   - the variable's name
   - the variable's scope (even though not necessary so far)
 
+  The symtab also accounts for stack alignment.
+
   A linked list is built in case of hash collisions
   Index 0 of the hashmap is reserved for the global scope
 

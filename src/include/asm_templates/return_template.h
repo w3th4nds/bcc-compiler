@@ -2,10 +2,10 @@
 #define _RETURN_TEMPLATE_H_
 
 #define return_template_asm \
-"mov rax, 0x%x\n\
+"mov rax, 0x%lx\n\
 pop rbp\n\
 ret\n"
 
-#define return_template_sz 35
+#define return_template_sz 36
 
 #endif
