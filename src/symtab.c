@@ -19,6 +19,16 @@ Symtab_t *init_symtab(void)
   return symtab;
 }
 
+SymtabEntry_t *symtab_getentry(Symtab_t *symtab, char *entry_id)
+{
+  for (int i = 0; i < symtab->list->size; ++i) {
+    SymtabEntry_t *entry = symtab->list->items[i];
+    if (strcmp(entry->name, entry_id) == 0) return entry;
+  }
+  error_exit("symtab_getentry() - could not find the entry id requested\n");
+  return NULL;
+}
+
 void print_symtab(Symtab_t *symtab)
 {
   int pad = 0;

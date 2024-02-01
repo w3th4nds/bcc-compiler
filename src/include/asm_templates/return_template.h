@@ -4,9 +4,9 @@
 #define return_template_asm \
 "mov rax, %d\n\
 pop rbp\n\
-ret\n\
+ret\n\n\
 "
 
-#define return_template_sz 35
+#define return_template_sz 36
 
 #endif

@@ -42,7 +42,7 @@ void bcc_compile(char *src)
   AST_t *root = parser_parse(parser);
   if (SCOPE_DEBUG) print_scopes(scope_manager);
   char *generated_assembly = asm_generate(scope_manager, root);
-  if (ASM_DEBUG) printf("\nGenerated ASM =\n%s\n", generated_assembly);
+  if (ASM_DEBUG) printf("\nGenerated ASM =\n%s", generated_assembly);
   bcc_write_asm("out.s", generated_assembly);
 
   printf("[ SUCCESS ]\n");

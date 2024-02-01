@@ -66,6 +66,13 @@ void scope_add_specs(ScopeManager_t *scope_manager, int type, List_t *params)
     error_exit("scope_add_specs() - current scope does not exist in hashmap\n");
 }
 
+// search for an entry id in the current scope
+SymtabEntry_t *scope_getsymtabentry(ScopeManager_t *scope_manager, char *entry_id)
+{
+  SymtabEntry_t *entry = hashmap_getsymtabentry(scope_manager->scopes, scope_manager->current_scope_id, entry_id);
+  return entry;
+}
+
 void print_scopes(ScopeManager_t *scope_manager)
 {
   for (int i = 0; i < HASHMAP_SZ; ++i) {

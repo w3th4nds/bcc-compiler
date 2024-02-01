@@ -86,7 +86,14 @@ void hashmap_set(Bucket_t **hashmap, char *scope_id)
   }
 }
 
-Bucket_t *hashmap_getitem(Bucket_t **hashmap, char *scope_id)
+SymtabEntry_t *hashmap_getsymtabentry(Bucket_t **hashmap, char *scope_id, char *entry_id)
+{
+  Bucket_t *bucket = hashmap_getbucket(hashmap, scope_id);
+  SymtabEntry_t *entry = symtab_getentry(bucket->symtab, entry_id);
+  return entry;
+}
+
+Bucket_t *hashmap_getbucket(Bucket_t **hashmap, char *scope_id)
 {
   int key = gethash(scope_id);
   if (key == 0) return hashmap[0];
@@ -96,7 +103,7 @@ Bucket_t *hashmap_getitem(Bucket_t **hashmap, char *scope_id)
     if (strcmp(bucket->scope_id, scope_id) == 0) return bucket;
     bucket = bucket->next;
   }
-  error_exit("hashmap_getitem() - scope_id not found\n");
+  error_exit("hashmap_getbucket() - scope_id not found\n");
   return NULL;
 }
 

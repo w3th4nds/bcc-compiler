@@ -6,8 +6,69 @@ The goal is to compile basic programs, "#include"'s, typedefs and other fancy th
 
 Will not compile itself. Unless things get out of hand.
 
+
+Example:
+
 ```
-DEBUG=PARSE,ASM ./bcc tests/test2.c && ./build.sh
+DEBUG=SCOPE,ASM ./bcc tests/test3.c && ./build.sh                                                                                       
+DEBUGGING:
+    LEX = 0
+  PARSE = 0
+  SCOPE = 1
+    ASM = 1
+
+Source Code:
+// comment
+int main(void)
+{
+  int a = 3;
+  int b = 4;
+  return 3 * 5 + 9;
+}
+
+Setting scope -> global
+Setting scope -> "main"
+Current_scope: main - adding: "a" TYPE_INT
+Current_scope: main - adding: "b" TYPE_INT
+
+Global scope:
+Symtab:
+---
+
+main:
+Return type: TYPE_INT
+Params: (TYPE_VOID (null))
+Symtab:
+
+[ a               | TYPE_INT     | sz: 4 | off: 0x0  ]
+------------------------------------------------------
+[ b               | TYPE_INT     | sz: 4 | off: 0x4  ]
+---
+asm_generate()
+asm_func_def()
+Setting scope -> "main"
+asm_assignment
+asm_assignment
+asm_return()
+
+Generated ASM =
+global main
+
+section .text
+
+main:
+push rbp
+mov rbp, rsp
+mov dword [rbp-4], 3
+mov dword [rbp-8], 4
+mov rax, 24
+pop rbp
+ret
+
+[ SUCCESS ]
+[*] Building asm into executable...
+[*] Running it and checking the return value
+24
 ```
 
 Work in progress

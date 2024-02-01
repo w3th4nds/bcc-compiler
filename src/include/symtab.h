@@ -20,6 +20,7 @@ typedef struct {
 
 Symtab_t *init_symtab(void);
 SymtabEntry_t *init_symtab_entry(int type, char *name, char *scope_id);
+SymtabEntry_t *symtab_getentry(Symtab_t *symtab, char *entry_id);
 void print_symtab(Symtab_t *symtab);
 
 #endif

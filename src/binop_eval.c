@@ -33,7 +33,6 @@ int binop_evaluate_(AST_t *node)
       if (node->op == TOKEN_DIV)
         return binop_evaluate_(node->left) / binop_evaluate_(node->right);
     case AST_NUM:
-      printf("astnum = %d\n", node->num_value);
       return node->num_value;
     default:
       error_exit("binop_evaluate_() - default reached\n");
