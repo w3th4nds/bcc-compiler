@@ -138,7 +138,7 @@ char *asm_assignment(AsmCtx_t *ctx)
   char *assign_template = "mov dword [rbp-%d], %d\n";
   size_t assign_template_sz = strlen(assign_template) + 32;
   char *code = calloc(assign_template_sz, sizeof(char));
-  snprintf(code, assign_template_sz, assign_template, entry->offset + entry->size, value);
+  snprintf(code, assign_template_sz, assign_template, entry->offset, value);
 
   return code;
 }

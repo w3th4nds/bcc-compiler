@@ -38,8 +38,10 @@ void hashmap_add(Bucket_t **hashmap, char *scope_id, SymtabEntry_t *symtab_entry
       bucket = bucket->next;
     }
   }
-  symtab_entry->offset = bucket->symtab->offset;
-  bucket->symtab->offset += symtab_entry->size;
+  symtab_entry->offset = bucket->symtab->offset + symtab_entry->size;
+  // achieve alignment
+  symtab_entry->offset += symtab_entry->offset % symtab_entry->size;
+  bucket->symtab->offset = symtab_entry->offset;
   list_push(bucket->symtab->list, symtab_entry);
 }
 
