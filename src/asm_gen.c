@@ -118,7 +118,7 @@ char *asm_return(AsmCtx_t *ctx)
 
 char *asm_assignment(AsmCtx_t *ctx)
 {
-  if (ASM_DEBUG) printf("asm_assignment\n");
+  if (ASM_DEBUG) printf("asm_assignment()\n");
   char *id = ctx->node->decl == NULL ? ctx->node->name : ctx->node->decl->name;
   SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, id);
 

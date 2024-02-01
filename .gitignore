@@ -1,2 +1,6 @@
 .gdb_history
 tags
+out
+out.o
+out.s
+bcc
