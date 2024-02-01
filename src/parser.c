@@ -108,7 +108,6 @@ AST_t *parser_parse_statement(Parser_t *parser)
 AST_t *parser_parse_assignment(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_assignment()\n");
-  // only int support for now
   AST_t *ast = init_ast(AST_ASSIGNMENT);
   if (is_decl(parser)) {
     ast->decl = parser_parse_decl(parser);
@@ -118,7 +117,8 @@ AST_t *parser_parse_assignment(Parser_t *parser)
     parser_eat(parser, TOKEN_ID);
   }
   ast->op = parser->token->kind;
-  parser_eat(parser, parser->token->kind); //TODO: fix bad use
+  //TODO: fix bad use - no error checking here
+  parser_eat(parser, parser->token->kind);
   ast->value = parser_parse_expr(parser);
   return ast;
 }
@@ -174,14 +174,17 @@ AST_t *parser_parse_factor(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_factor()\n");
   switch (parser->token->kind) {
-    case TOKEN_LP:      return parser_parse_comp_list(parser); // TODO: this is not correct
-    case TOKEN_NUM:     return parser_parse_num(parser);
-    case TOKEN_STRING:  return parser_parse_string(parser);
+    case TOKEN_LP:      
+      parser_eat(parser, TOKEN_LP);
+      AST_t *par_expr = parser_parse_expr(parser);
+      parser_eat(parser, TOKEN_RP);
+      return par_expr;
+    case TOKEN_NUM:     
+      return parser_parse_num(parser);
+    case TOKEN_STRING:  
+      return parser_parse_string(parser);
     case TOKEN_ID:      
-      if (is_function_call(parser))
-        return parser_parse_call(parser);
-      else
-        return parser_parse_id(parser);
+      return is_function_call(parser) ? parser_parse_call(parser) : parser_parse_id(parser);
     default:
       print_token(parser->token);
       error_exit("parser_parse_factor: Implement\n");
@@ -228,13 +231,11 @@ AST_t *parser_parse_compound(Parser_t *parser)
     parser_eat(parser, TOKEN_LBRACE);
 
   AST_t *compound = init_ast(AST_COMPOUND);
-
   while (parser->token->kind != TOKEN_EOF && parser->token->kind != TOKEN_RBRACE) {
     list_push(compound->children, parser_parse_statement(parser));
     if (parser->token->kind == TOKEN_SEMI)
       parser_eat(parser, TOKEN_SEMI);
   }
-
   if (parser->token->kind == TOKEN_RBRACE)
     parser_eat(parser, TOKEN_RBRACE);
 
@@ -246,7 +247,6 @@ List_t *parser_parse_params(Parser_t *parser)
   if (PARSE_DEBUG) printf("parser_parse_params()\n");
   parser_eat(parser, TOKEN_LP);
   List_t *list = init_list(sizeof(AST_t *));
-
   if (parser->token->kind != TOKEN_RP) {
     list_push(list, parser_parse_decl(parser));
     while (parser->token->kind == TOKEN_COMMA) {
@@ -254,7 +254,6 @@ List_t *parser_parse_params(Parser_t *parser)
       list_push(list, parser_parse_decl(parser));
     }
   }
-
   parser_eat(parser, TOKEN_RP);
   return list;
 }
@@ -298,6 +297,7 @@ AST_t *parser_parse_function(Parser_t *parser)
   return ast;
 }
 
+// TODO: cleanup recon functions
 bool is_function_def(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("is_function_def()\n");

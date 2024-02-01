@@ -4,13 +4,13 @@
 # with assembly template definitions
 
 # change this
-FNAME = 'funcdef_template'
+FNAME = 'return_template'
 
 # and this
 TEMPLATE = '''"\
-%s:\\n\\
-push rbp\\n\\
-mov rbp, rsp\\n\
+mov rax, 0x%x\\n\\
+pop rbp\\n\\
+ret\\n\
 "'''
 
 header = f'_{FNAME.upper()}_H_'

@@ -135,7 +135,15 @@ char *asm_assignment(AsmCtx_t *ctx)
       error_exit("asm_assignment() - default reached\n");
   }
   
-  char *assign_template = "mov dword [rbp-%d], %d\n";
+  char *assign_template;
+  switch (entry->size) {
+    case 1: assign_template = "mov byte [rbp-0x%x], 0x%x\n";  break;
+    case 2: assign_template = "mov word [rbp-0x%x], 0x%x\n";  break;
+    case 4: assign_template = "mov dword [rbp-0x%x], 0x%x\n"; break;
+    case 8: assign_template = "mov qword [rbp-0x%x], 0x%x\n"; break;
+    default: error_exit("asm_assignment() - size check default reached\n");
+  }
+
   size_t assign_template_sz = strlen(assign_template) + 32;
   char *code = calloc(assign_template_sz, sizeof(char));
   snprintf(code, assign_template_sz, assign_template, entry->offset, value);
