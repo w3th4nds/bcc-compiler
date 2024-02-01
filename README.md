@@ -6,11 +6,13 @@ The goal is to compile basic programs, "#include"'s, typedefs and other fancy th
 
 Will not compile itself. Unless things get out of hand.
 
+**Work in progress**
 
 Example:
 
 ```
-DEBUG=SCOPE,ASM ./bcc tests/test3.c && ./build.sh                                                                                       
+$ DEBUG=SCOPE,ASM ./bcc tests/test3.c && ./build.sh                                                                                       
+
 DEBUGGING:
     LEX = 0
   PARSE = 0
@@ -71,7 +73,6 @@ ret
 24
 ```
 
-Work in progress
 
 Notes:
 
