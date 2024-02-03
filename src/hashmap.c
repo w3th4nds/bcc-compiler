@@ -9,114 +9,114 @@ int gethash(char *id)
   return (acc % (HASHMAP_SZ-1)) + 1;
 }
 
-Bucket_t *create_bucket(char *scope_id)
+Scope_t *create_scope(char *scope_id)
 {
-  Bucket_t *bucket = calloc(1, sizeof(Bucket_t));
-  bucket->scope_id = scope_id;
-  bucket->specs_type = NO_TYPE;
-  bucket->params = NULL;
-  bucket->symtab = init_symtab();
-  return bucket;
+  Scope_t *scope = calloc(1, sizeof(Scope_t));
+  scope->scope_id = scope_id;
+  scope->specs_type = NO_TYPE;
+  scope->params = NULL;
+  scope->symtab = init_symtab();
+  return scope;
 }
 
-Bucket_t **create_hashmap(void)
+Scope_t **create_hashmap(void)
 {
-  Bucket_t **hashmap = calloc(HASHMAP_SZ, sizeof(Bucket_t *));
-  hashmap[0] = create_bucket(NULL);
+  Scope_t **hashmap = calloc(HASHMAP_SZ, sizeof(Scope_t *));
+  hashmap[0] = create_scope(NULL);
   return hashmap;
 }
 
 // add a symbol table entry to current symtab
-void hashmap_add(Bucket_t **hashmap, char *scope_id, SymtabEntry_t *symtab_entry)
+void hashmap_add(Scope_t **hashmap, char *scope_id, SymtabEntry_t *symtab_entry)
 {
   int key = gethash(scope_id);
-  Bucket_t *bucket = hashmap[key];
+  Scope_t *scope = hashmap[key];
   if (key != 0) {
     for (;;) {
-      if (bucket == NULL) error_exit("hashmap_add() - bucket = NULL, current scope id not found in hashmap\n");
-      if (strcmp(bucket->scope_id, scope_id) == 0) break;
-      bucket = bucket->next;
+      if (scope == NULL) error_exit("hashmap_add() - scope = NULL, current scope id not found in hashmap\n");
+      if (strcmp(scope->scope_id, scope_id) == 0) break;
+      scope = scope->next;
     }
   }
-  symtab_entry->offset = bucket->symtab->offset + symtab_entry->size;
+  symtab_entry->offset = scope->symtab->offset + symtab_entry->size;
   // achieve alignment
   symtab_entry->offset += symtab_entry->offset % symtab_entry->size;
-  bucket->symtab->offset = symtab_entry->offset;
-  list_push(bucket->symtab->list, symtab_entry);
+  scope->symtab->offset = symtab_entry->offset;
+  list_push(scope->symtab->list, symtab_entry);
 }
 
-void hashmap_add_specs(Bucket_t **hashmap, char *scope_id, int type, List_t *params)
+void hashmap_add_specs(Scope_t **hashmap, char *scope_id, int type, List_t *params)
 {
   int key = gethash(scope_id);
-  Bucket_t *bucket = hashmap[key];
+  Scope_t *scope = hashmap[key];
   if (key != 0) {
     for (;;) {
-      if (bucket == NULL) error_exit("hashmap_add_specs(): scope_id does not exist\n");;
-      if (strcmp(bucket->scope_id, scope_id) == 0) break;
-      bucket = bucket->next;
+      if (scope == NULL) error_exit("hashmap_add_specs(): scope_id does not exist\n");;
+      if (strcmp(scope->scope_id, scope_id) == 0) break;
+      scope = scope->next;
     }
   }
-  bucket->specs_type = type;
-  bucket->params = params;
+  scope->specs_type = type;
+  scope->params = params;
 }
 
-bool hashmap_key_exists(Bucket_t **hashmap, char *scope_id)
+bool hashmap_key_exists(Scope_t **hashmap, char *scope_id)
 {
   int key = gethash(scope_id);
   if (key == 0) return true;
-  Bucket_t *bucket = hashmap[key];
+  Scope_t *scope = hashmap[key];
   for (;;) {
-    if (bucket == NULL) break;
-    if (strcmp(bucket->scope_id, scope_id) == 0) return true;
-    bucket = bucket->next;
+    if (scope == NULL) break;
+    if (strcmp(scope->scope_id, scope_id) == 0) return true;
+    scope = scope->next;
   }
   return false;
 }
 
-// create a bucket for a NEW scope
-void hashmap_set(Bucket_t **hashmap, char *scope_id)
+// create a scope for a NEW scope
+void hashmap_set(Scope_t **hashmap, char *scope_id)
 {
   int key = gethash(scope_id);
-  Bucket_t *new_bucket = create_bucket(scope_id);
+  Scope_t *new_scope = create_scope(scope_id);
   if (hashmap[key] == NULL) {
-    hashmap[key] = new_bucket;
+    hashmap[key] = new_scope;
   }
   else {
-    Bucket_t *bucket = hashmap[key];
-    while (bucket->next != NULL) bucket = bucket->next;
-    bucket->next = new_bucket;
+    Scope_t *scope = hashmap[key];
+    while (scope->next != NULL) scope = scope->next;
+    scope->next = new_scope;
   }
 }
 
-SymtabEntry_t *hashmap_getsymtabentry(Bucket_t **hashmap, char *scope_id, char *entry_id)
+SymtabEntry_t *hashmap_getsymtabentry(Scope_t **hashmap, char *scope_id, char *entry_id)
 {
-  Bucket_t *bucket = hashmap_getbucket(hashmap, scope_id);
-  SymtabEntry_t *entry = symtab_getentry(bucket->symtab, entry_id);
+  Scope_t *scope = hashmap_getscope(hashmap, scope_id);
+  SymtabEntry_t *entry = symtab_getentry(scope->symtab, entry_id);
   return entry;
 }
 
-Bucket_t *hashmap_getbucket(Bucket_t **hashmap, char *scope_id)
+Scope_t *hashmap_getscope(Scope_t **hashmap, char *scope_id)
 {
   int key = gethash(scope_id);
   if (key == 0) return hashmap[0];
-  Bucket_t *bucket = hashmap[key];
+  Scope_t *scope = hashmap[key];
   for (;;) {
-    if (bucket == NULL) break;
-    if (strcmp(bucket->scope_id, scope_id) == 0) return bucket;
-    bucket = bucket->next;
+    if (scope == NULL) break;
+    if (strcmp(scope->scope_id, scope_id) == 0) return scope;
+    scope = scope->next;
   }
-  error_exit("hashmap_getbucket() - scope_id not found\n");
+  error_exit("hashmap_getscope() - scope_id not found\n");
   return NULL;
 }
 
-List_t *hashmap_get_all_ids(Bucket_t **hashmap)
+List_t *hashmap_get_all_ids(Scope_t **hashmap)
 {
   List_t *ids = init_list(sizeof(char *));
   for (int i = 1; i < HASHMAP_SZ; ++i) {
-    Bucket_t *bucket = hashmap[i];
-    while (bucket != NULL) {
-      list_push(ids, bucket->scope_id);
-      bucket = bucket->next;
+    Scope_t *scope = hashmap[i];
+    while (scope != NULL) {
+      list_push(ids, scope->scope_id);
+      scope = scope->next;
     }
   }
   return ids;

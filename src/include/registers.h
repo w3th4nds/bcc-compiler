@@ -3,6 +3,13 @@
 
 #include "debug.h"
 #include <stdbool.h>
+#include <assert.h>
+
+typedef enum {
+  NOT_INUSE = 0,
+  INUSE4,
+  INUSE8
+} RegState;
 
 // Up to 4 args support
 // Parameter Registers
@@ -28,17 +35,18 @@ typedef enum {
   GenRegs_end
 } GenReg;
 
+// TODO: if this ends up only needing one field, simplify
 typedef struct {
-  bool inuse[GenRegs_end];
+  RegState inuse[GenRegs_end];
 } RegisterManager_t;
 
 RegisterManager_t *init_register_manager(void);
-char *get_param_register(int param_n);
-char *get_register(RegisterManager_t *reg_manager);
-char *get_used_register(RegisterManager_t *reg_manager, int last_used_idx);
+char *get_param_register(int param_n, size_t size);
+char *get_register(RegisterManager_t *reg_manager, size_t size);
+char *get_used_register(RegisterManager_t *reg_manager, int last_used_idx, size_t size);
 void free_register(RegisterManager_t *reg_manager, char *reg);
-char *paramreg_enum_to_str(GenReg reg);
-char *genreg_enum_to_str(GenReg reg);
-int genreg_str_to_enum(char *reg);
+char *paramreg_enum_to_str(GenReg reg, size_t size);
+char *genreg_enum_to_str(GenReg reg, size_t size);
+GenReg genreg_str_to_enum(char *reg);
 
 #endif

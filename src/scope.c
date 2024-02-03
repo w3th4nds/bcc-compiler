@@ -7,7 +7,7 @@
   A hashmap holds the symtab for each given scope
   "current_scope_id" points to the function id currently being parsed
 
-  Buckets are the hashmap entries that hold:
+  scopes are the hashmap entries that hold:
   - the id (function name)
   - the function return type
   - the function parameters and their types
@@ -68,6 +68,12 @@ void scope_add_specs(ScopeManager_t *scope_manager, int type, List_t *params)
     error_exit("scope_add_specs() - current scope does not exist in hashmap\n");
 }
 
+Scope_t *scope_getcurrentscope(ScopeManager_t *scope_manager)
+{
+  Scope_t *scope = hashmap_getscope(scope_manager->scopes, scope_manager->current_scope_id);
+  return scope;
+}
+
 // search for an entry id in the current scope
 SymtabEntry_t *scope_getsymtabentry(ScopeManager_t *scope_manager, char *entry_id)
 {
@@ -78,25 +84,25 @@ SymtabEntry_t *scope_getsymtabentry(ScopeManager_t *scope_manager, char *entry_i
 void print_scopes(ScopeManager_t *scope_manager)
 {
   for (int i = 0; i < HASHMAP_SZ; ++i) {
-    Bucket_t *bucket = scope_manager->scopes[i];
-    while (bucket != NULL) {
-      if (bucket->scope_id == NULL) {
+    Scope_t *scope = scope_manager->scopes[i];
+    while (scope != NULL) {
+      if (scope->scope_id == NULL) {
         printf("\nGlobal scope:\n");
       }
       else {
         printf("\n%s:\n"
                "Return type: %s\n"
-               "Params: (", bucket->scope_id, type_to_str(bucket->specs_type));
-        for (int ii = 0; ii < bucket->params->size; ++ii) {
-          AST_t *param = bucket->params->items[ii];
+               "Params: (", scope->scope_id, type_to_str(scope->specs_type));
+        for (int ii = 0; ii < scope->params->size; ++ii) {
+          AST_t *param = scope->params->items[ii];
           printf("%s %s", type_to_str(param->specs_type), param->name);
-          if (ii != bucket->params->size-1) printf(", ");
+          if (ii != scope->params->size-1) printf(", ");
         }
         printf(")\n");
       }
       printf("Symtab:\n");
-      print_symtab(bucket->symtab);
-      bucket = bucket->next;
+      print_symtab(scope->symtab);
+      scope = scope->next;
       printf("---\n");
     }
   }
