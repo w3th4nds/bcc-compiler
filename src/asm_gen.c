@@ -44,6 +44,7 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
     }
     code = realloc(code, strlen(code) + strlen(next_code) + 1);
     strcat(code, next_code);
+    //printf("code so far = \n%s\n", code);
   }
   return code;
 }
@@ -54,6 +55,8 @@ char *asm_func_def(AsmCtx_t *ctx)
   char *code = calloc(funcdef_template_sz+128, sizeof(char));
   Bucket_t *bucket = hashmap_getbucket(ctx->scope_manager->scopes, ctx->node->name);
   snprintf(code, funcdef_template_sz+128, funcdef_template_asm, ctx->node->name);
+
+  // TODO: make params work
 
   // set the scope to make things easier
   scope_set(ctx->scope_manager, ctx->node->name);
@@ -90,18 +93,21 @@ char *asm_func_def(AsmCtx_t *ctx)
 char *asm_return(AsmCtx_t *ctx)
 {
   if (ASM_DEBUG) printf("asm_return()\n");
-  char *code;
+  size_t sz;
+  char *code, *template;
   switch(ctx->node->value->node_type) {
     case AST_NUM:
-      code = calloc(return_template_sz+128, sizeof(char));
-      snprintf(code, return_template_sz+128, return_template_asm, ctx->node->value->num_value);
+      sz = strlen(return_template_num) + 36;
+      code = calloc(sz, sizeof(char));
+      snprintf(code, sz, return_template_num, ctx->node->value->num_value);
       break;
     case AST_BINOP:
-      // in case the binop can be calculated on the spot
       BinopResult_t *res = binop_evaluate(ctx->node->value);
+      // if it can be computed on the spot, do that
       if (res->computed) {
-        code = calloc(return_template_sz+128, sizeof(char));
-        snprintf(code, return_template_sz+128, return_template_asm, res->value);
+        sz = strlen(return_template_num) + 36;
+        code = calloc(sz, sizeof(char));
+        snprintf(code, sz, return_template_num, res->value);
       }
       else {
         // TODO: implement
@@ -109,7 +115,29 @@ char *asm_return(AsmCtx_t *ctx)
       }
       break;
     case AST_ID:
+      SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, ctx->node->value->name);
+      switch (entry->size) {
+        case 1: template = return_template_var1; break;
+        case 2: template = return_template_var2; break;
+        case 4: template = return_template_var4; break;
+        case 8: template = return_template_var8; break;
+        default: error_exit("asm_return() - case AST_ID: size check default reached\n");
+      }
+      sz = strlen(template) + 24;
+      code = calloc(sz, sizeof(char));
+      snprintf(code, sz, template, entry->offset);
+      break;
     case AST_CALL:
+      // TODO: make this prettier
+      AST_t *tmp = ctx->node;
+      ctx->node = ctx->node->value;
+      code = asm_call(ctx);
+      ctx->node = tmp;
+      template = "pop rbp\nret\n\n";
+      sz = strlen(template) + 1;
+      code = realloc(code, strlen(code) + sz);
+      strcpy(code+strlen(code), template);
+      break;
     default:
       error_exit("asm_return - default case - implement\n");
   }
@@ -139,14 +167,61 @@ char *asm_assignment(AsmCtx_t *ctx)
   switch (entry->size) {
     case 1: assign_template = "mov byte [rbp-0x%x], 0x%x\n";  break;
     case 2: assign_template = "mov word [rbp-0x%x], 0x%x\n";  break;
-    case 4: assign_template = "mov dword [rbp-0x%x], 0x%x\n"; break;
-    case 8: assign_template = "mov qword [rbp-0x%x], 0x%lx\n"; break;
+    case 4: assign_template = "mov dword [rbp-0x%x], 0x%lx\n"; break;
+    case 8: assign_template = "mov qword [rbp-0x%x], 0x%llx\n"; break;
     default: error_exit("asm_assignment() - size check default reached\n");
   }
 
   size_t assign_template_sz = strlen(assign_template) + 32;
   char *code = calloc(assign_template_sz, sizeof(char));
   snprintf(code, assign_template_sz, assign_template, entry->offset, value);
+
+  return code;
+}
+
+char *asm_call(AsmCtx_t *ctx)
+{
+  if (ASM_DEBUG) printf("asm_call()\n");
+  char *code = calloc(1, sizeof(char));
+  // TODO: add support for func calls as args
+  char *template_num = "mov %s, 0x%x\n";
+  char *template_id;
+  size_t sz;
+  // put params in registers
+  List_t *params = ctx->node->children;
+  for (int i = 0; i < params->size; ++i) {
+    AST_t *param = params->items[i];
+    char *reg = get_param_register(i);
+    switch (param->node_type) {
+      case AST_NUM:
+        // use strcat here
+        sz = strlen(template_num) + 24;
+        code = realloc(code, strlen(code) + sz);
+        snprintf(code+strlen(code), sz, template_num, reg, param->num_value);
+        break;
+      case AST_ID:
+        // TODO: fix repeating code, make more defined templates
+        // ugly embedded switch stmt
+        SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, param->name);
+        switch (entry->size) {
+          case 1: template_id = "mov %s, byte [rbp-0x%x]\n";  break;
+          case 2: template_id = "mov %s, word [rbp-0x%x]\n";  break;
+          case 4: template_id = "mov %s, dword [rbp-0x%x]\n"; break;
+          case 8: template_id = "mov %s, qword [rbp-0x%x]\n"; break;
+          default: error_exit("asm_call() - param size check default reached\n");
+        }
+        sz = strlen(code) + strlen(template_id) + 36;
+        code = realloc(code, sz);
+        snprintf(code, sz, template_id, reg, entry->offset);
+        break;
+      default:      error_exit("asm_call - param default case reached\n");
+    }
+  }
+
+  char *call_template = "call %s\n";
+  sz = strlen(call_template) + 36;
+  code = realloc(code, strlen(code) + sz);
+  snprintf(code+strlen(code), sz, call_template, ctx->node->name);
 
   return code;
 }

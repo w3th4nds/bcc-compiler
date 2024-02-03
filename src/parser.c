@@ -100,7 +100,7 @@ AST_t *parser_parse_statement(Parser_t *parser)
   if (parser->token->kind == TOKEN_RETURN) return parser_parse_return(parser);
   if (is_function_call(parser)) return parser_parse_call(parser);
   if (is_assignment(parser))    return parser_parse_assignment(parser);
-  if (is_decl(parser))          return parser_parse_decl(parser);
+  if (is_decl(parser))          return parser_parse_decl(parser, true);
   error_exit("parser_parse_statement() - implement\n");
   return NULL;
 }
@@ -110,7 +110,7 @@ AST_t *parser_parse_assignment(Parser_t *parser)
   if (PARSE_DEBUG) printf("parser_parse_assignment()\n");
   AST_t *ast = init_ast(AST_ASSIGNMENT);
   if (is_decl(parser)) {
-    ast->decl = parser_parse_decl(parser);
+    ast->decl = parser_parse_decl(parser, true);
   }
   else {
     ast->name = parser_get_value(parser);
@@ -132,7 +132,7 @@ AST_t *parser_parse_call(Parser_t *parser)
   parser_eat(parser, TOKEN_ID);
   // args
   ast->children = parser_parse_list(parser);
-  return NULL;
+  return ast;
 }
 
 List_t *parser_parse_list(Parser_t *parser)
@@ -248,17 +248,17 @@ List_t *parser_parse_params(Parser_t *parser)
   parser_eat(parser, TOKEN_LP);
   List_t *list = init_list(sizeof(AST_t *));
   if (parser->token->kind != TOKEN_RP) {
-    list_push(list, parser_parse_decl(parser));
+    list_push(list, parser_parse_decl(parser, false));
     while (parser->token->kind == TOKEN_COMMA) {
       parser_eat(parser, TOKEN_COMMA);
-      list_push(list, parser_parse_decl(parser));
+      list_push(list, parser_parse_decl(parser, false));
     }
   }
   parser_eat(parser, TOKEN_RP);
   return list;
 }
 
-AST_t *parser_parse_decl(Parser_t *parser)
+AST_t *parser_parse_decl(Parser_t *parser, bool add_to_symtab)
 {
   if (PARSE_DEBUG) printf("parser_parse_decl()\n");
   AST_t *ast = init_ast(AST_DECL);
@@ -273,7 +273,7 @@ AST_t *parser_parse_decl(Parser_t *parser)
   ast->name = parser_get_value(parser);
   parser_eat(parser, TOKEN_ID);
   // add to scope
-  scope_add_to_symtab(parser->scope_manager, ast->specs_type, ast->name);
+  if (add_to_symtab) scope_add_to_symtab(parser->scope_manager, ast->specs_type, ast->name);
   return ast;
 }
 

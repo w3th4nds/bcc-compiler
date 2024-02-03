@@ -20,7 +20,7 @@ bool binop_iscomputable(AST_t *node)
   return false;
 }
 
-int binop_evaluate_(AST_t *node)
+long binop_evaluate_(AST_t *node)
 {
   switch (node->node_type) {
     case AST_BINOP:

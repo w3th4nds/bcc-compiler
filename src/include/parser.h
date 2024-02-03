@@ -36,7 +36,7 @@ AST_t *parser_parse_compound(Parser_t *parser);
 AST_t *parser_parse_statement(Parser_t *parser);
 List_t *parser_parse_params(Parser_t *parser);
 AST_t *parser_parse_specs(Parser_t *parser);
-AST_t *parser_parse_decl(Parser_t *parser);
+AST_t *parser_parse_decl(Parser_t *parser, bool add_to_symtab);
 AST_t *parser_parse_function(Parser_t *parser);
 bool is_function_def(Parser_t *parser);
 bool is_function_call(Parser_t *parser);

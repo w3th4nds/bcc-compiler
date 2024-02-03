@@ -7,6 +7,7 @@
 #include <string.h>
 
 /*
+  Each AST type uses different 
   AST_NUMS:
     - num_value
   AST_ID:
@@ -37,20 +38,7 @@
     - children (list of statements)
 */
 
-
-// TODO: make this less confusing
 typedef struct AST_STRUCT {
-  // compound statements - decl args
-  List_t *children;
-  char *name;
-  int specs_type;
-  long num_value;
-  int op;
-  struct AST_STRUCT *value;
-  struct AST_STRUCT *left;
-  struct AST_STRUCT *right;
-  struct AST_STRUCT *decl;
-  struct AST_STRUCT *body;
   // AST node type
   enum {
     AST_NUM,
@@ -63,6 +51,17 @@ typedef struct AST_STRUCT {
     AST_BINOP,
     AST_COMPOUND,
   } node_type;
+  //--
+  char *name;
+  int specs_type;
+  long num_value;
+  int op;
+  struct AST_STRUCT *value;
+  struct AST_STRUCT *left;
+  struct AST_STRUCT *right;
+  struct AST_STRUCT *decl;
+  struct AST_STRUCT *body;
+  List_t *children;
 } AST_t;
 
 AST_t *init_ast(int node_type);

@@ -13,11 +13,11 @@
 // were part of the calculation
 typedef struct {
   bool computed;
-  int value;
+  long value;
 } BinopResult_t;
 
 BinopResult_t *binop_evaluate(AST_t *node);
 bool binop_iscomputable(AST_t *node);
-int binop_evaluate_(AST_t *node);
+long binop_evaluate_(AST_t *node);
 
 #endif
