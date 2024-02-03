@@ -74,6 +74,12 @@ Scope_t *scope_getcurrentscope(ScopeManager_t *scope_manager)
   return scope;
 }
 
+Scope_t *scope_getscopebyid(ScopeManager_t *scope_manager, char *scope_id)
+{
+  Scope_t *scope = hashmap_getscope(scope_manager->scopes, scope_id);
+  return scope;
+}
+
 // search for an entry id in the current scope
 SymtabEntry_t *scope_getsymtabentry(ScopeManager_t *scope_manager, char *entry_id)
 {

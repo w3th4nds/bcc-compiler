@@ -126,7 +126,6 @@ char *asm_return(AsmCtx_t *ctx)
       }
       else {
         code = res->code;
-        // TODO: fix 8 - look at function return type
         char *result_reg = get_used_register(ctx->reg_manager, 1, type_size(scope->specs_type));
         template = "mov %s, %s\n";
         sz = strlen(template) + 8;
@@ -199,38 +198,36 @@ char *asm_call(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_call()\n");
   char *code = calloc(1, sizeof(char));
-  // TODO: add support for func calls as args
-  char *template_num = "mov %s, 0x%x\n";
-  char *template_id;
+  char *template;
   size_t sz;
+  Scope_t *call_scope = scope_getscopebyid(ctx->scope_manager, node->name);
   // put params in registers
   List_t *params = node->children;
   for (int i = 0; i < params->size; ++i) {
-    AST_t *param = params->items[i];
-    // TODO: look at symtab for call's param
-    // and request param register with fitting size (rdi / edi)
-    char *reg = get_param_register(i, 8);
+    AST_t *param = params->items[i];            // param -> value passed to function
+    AST_t *arg = call_scope->params->items[i];  // arg   -> declared in funcdef
+    char *reg = get_param_register(i, type_size(arg->specs_type));
     switch (param->node_type) {
       case AST_NUM:
-        // use strcat here
-        sz = strlen(template_num) + 24;
+        template = "mov %s, 0x%x\n";
+        sz = strlen(template) + 24;
         code = realloc(code, strlen(code) + sz);
-        snprintf(code+strlen(code), sz, template_num, reg, param->num_value);
+        snprintf(code+strlen(code), sz, template, reg, param->num_value);
         break;
       case AST_ID:
         // TODO: fix repeating code, make more defined templates
         // ugly embedded switch stmt
         SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, param->name);
         switch (entry->size) {
-          case 1: template_id = "mov %s, byte [rbp-0x%x]\n";  break;
-          case 2: template_id = "mov %s, word [rbp-0x%x]\n";  break;
-          case 4: template_id = "mov %s, dword [rbp-0x%x]\n"; break;
-          case 8: template_id = "mov %s, qword [rbp-0x%x]\n"; break;
+          case 1: template = "mov %s, byte [rbp-0x%x]\n";  break;
+          case 2: template = "mov %s, word [rbp-0x%x]\n";  break;
+          case 4: template = "mov %s, dword [rbp-0x%x]\n"; break;
+          case 8: template = "mov %s, qword [rbp-0x%x]\n"; break;
           default: error_exit("asm_call() - param size check default reached\n");
         }
-        sz = strlen(code) + strlen(template_id) + 36;
+        sz = strlen(code) + strlen(template) + 36;
         code = realloc(code, sz);
-        snprintf(code, sz, template_id, reg, entry->offset);
+        snprintf(code, sz, template, reg, entry->offset);
         break;
       default: error_exit("asm_call - param default case reached\n");
     }
