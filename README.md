@@ -1,6 +1,6 @@
 # BCC - Bad C Compiler
 
-**Building a basic C compiler, for educational purposes and bragging rights.**
+**Building a basic C compiler from scratch, for educational purposes and bragging rights.**
 
 Outputs `x86 64-bit assembly`, nasm & gcc are used from there to create the binary file.
 
