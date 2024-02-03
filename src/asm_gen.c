@@ -129,11 +129,7 @@ char *asm_return(AsmCtx_t *ctx)
       snprintf(code, sz, template, entry->offset);
       break;
     case AST_CALL:
-      // TODO: make this prettier
-      AST_t *tmp = ctx->node;
-      ctx->node = ctx->node->value;
-      code = asm_call(ctx);
-      ctx->node = tmp;
+      code = asm_call(ctx, ctx->node->value);
       template = "pop rbp\nret\n\n";
       sz = strlen(template) + 1;
       code = realloc(code, strlen(code) + sz);
@@ -178,7 +174,7 @@ char *asm_assignment(AsmCtx_t *ctx)
   return code;
 }
 
-char *asm_call(AsmCtx_t *ctx)
+char *asm_call(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_call()\n");
   char *code = calloc(1, sizeof(char));
@@ -187,7 +183,7 @@ char *asm_call(AsmCtx_t *ctx)
   char *template_id;
   size_t sz;
   // put params in registers
-  List_t *params = ctx->node->children;
+  List_t *params = node->children;
   for (int i = 0; i < params->size; ++i) {
     AST_t *param = params->items[i];
     char *reg = get_param_register(i);
@@ -216,12 +212,10 @@ char *asm_call(AsmCtx_t *ctx)
       default: error_exit("asm_call - param default case reached\n");
     }
   }
-
   char *call_template = "call %s\n";
   sz = strlen(call_template) + 36;
   code = realloc(code, strlen(code) + sz);
   snprintf(code+strlen(code), sz, call_template, ctx->node->name);
-
   return code;
 }
 
