@@ -25,6 +25,7 @@ int main(void)
   long b = 30;
   long a = 5;
   return a + 2 * b;
+}
 
 Setting scope -> global
 Setting scope -> "main"
