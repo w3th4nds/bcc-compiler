@@ -4,19 +4,8 @@ AST_t *init_ast(int node_type)
 {
   AST_t *ast = calloc(1, sizeof(AST_t));
   ast->node_type = node_type;
-  switch (node_type) {
-    case AST_COMPOUND:
-      ast->children = init_list(sizeof(AST_t *));
-      ast->name = "AST_COMPOUND";
-      break;
-    case AST_RETURN:
-      ast->name = "AST_RETURN";
-      break;
-    case AST_CALL:
-      ast->children = init_list(sizeof(AST_t *));
-      break;
-    default:
-  }
+  if (node_type == AST_COMPOUND || node_type == AST_CALL)
+    ast->children = init_list(sizeof(AST_t *));
   return ast;
 }
 
@@ -38,6 +27,8 @@ char *AST_type_to_str(int node_type)
   }
 }
 
+// TODO: implement
+// used for drawing graphs with python
 char *AST_to_str(AST_t *ast)
 {
   char *buf = calloc(200, sizeof(char));
