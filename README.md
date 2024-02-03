@@ -1,8 +1,12 @@
 # BCC - Bad C Compiler
 
-Building a basic C compiler, for educational purposes and bragging rights.
+**Building a basic C compiler, for educational purposes and bragging rights.**
 
-The goal is to compile basic programs, "#include"'s, typedefs and other fancy things are forbidden.
+Outputs `x86 64-bit assembly`, nasm & gcc are used from there to create the binary file.
+
+The goal is to compile basic programs, `#include`'s, `typedefs` and other fancy things are forbidden.
+
+Simplicity is valued more highly than support for C more features. Will try to keep the entire thing under 3000 lines.
 
 Will not compile itself. Unless things get out of hand.
 
@@ -84,7 +88,7 @@ ret
 ```
 
 
-Notes:
+**Notes:**
 
 ```
 Q: Why is there no "sub rsp, X" in all my functions, even though local variables are declared ?
