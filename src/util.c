@@ -1,5 +1,12 @@
 #include "include/util.h"
 
+/*
+
+This code is not being used and does not work.
+Will fix at some point.
+
+*/
+
 char *format(AST_t *node)
 {
   char *buf = calloc(1000, sizeof(char));
