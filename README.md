@@ -11,8 +11,7 @@ Will not compile itself. Unless things get out of hand.
 Example:
 
 ```
-$ DEBUG=SCOPE,ASM ./bcc tests/test3.c && ./build.sh                                                                                       
-
+$ DEBUG=SCOPE,ASM ./bcc tests/test8.c && ./build.sh
 DEBUGGING:
     LEX = 0
   PARSE = 0
@@ -20,20 +19,18 @@ DEBUGGING:
     ASM = 1
 
 Source Code:
-// comment
 int main(void)
 {
-  int a = 3;
-  long c = 5;
-  int b = 4;
-  return 3 * (5 + 9 * (4 + 3));
-}
+  int dummy = 1;
+  long b = 30;
+  long a = 5;
+  return a + 2 * b;
 
 Setting scope -> global
 Setting scope -> "main"
-Current_scope: main - adding: "a" TYPE_INT
-Current_scope: main - adding: "c" TYPE_LONG
-Current_scope: main - adding: "b" TYPE_INT
+Current_scope: main - adding: "dummy" TYPE_INT
+Current_scope: main - adding: "b" TYPE_LONG
+Current_scope: main - adding: "a" TYPE_LONG
 
 Global scope:
 Symtab:
@@ -44,19 +41,21 @@ Return type: TYPE_INT
 Params: (TYPE_VOID (null))
 Symtab:
 
-[ a               | TYPE_INT     | sz: 4 | off: 0x4  ]
+[ dummy           | TYPE_INT     | sz: 4 | off: 0x4  ]
 ------------------------------------------------------
-[ c               | TYPE_LONG    | sz: 8 | off: 0x10 ]
+[ b               | TYPE_LONG    | sz: 8 | off: 0x10 ]
 ------------------------------------------------------
-[ b               | TYPE_INT     | sz: 4 | off: 0x14 ]
+[ a               | TYPE_LONG    | sz: 8 | off: 0x18 ]
 ---
 asm_generate()
 asm_func_def()
 Setting scope -> "main"
-asm_assignment
-asm_assignment
-asm_assignment
+asm_assignment()
+asm_assignment()
+asm_assignment()
 asm_return()
+binop_evaluate()
+
 Generated ASM =
 global main
 
@@ -65,17 +64,22 @@ section .text
 main:
 push rbp
 mov rbp, rsp
-mov dword [rbp-0x4], 0x3
-mov qword [rbp-0x10], 0x5
-mov dword [rbp-0x14], 0x4
-mov rax, 0xcc
+mov dword [rbp-0x4], 0x1
+mov qword [rbp-0x10], 0x1e
+mov qword [rbp-0x18], 0x5
+mov rbx, qword [rbp-0x18]
+mov r8, 0x2
+mov r9, qword [rbp-0x10]
+imul r8, r9
+add rbx, r8
+mov rax, rbx
 pop rbp
 ret
+
 [ SUCCESS ]
 [*] Building asm into executable...
 [*] Running it and checking the return value
-204
-
+65
 ```
 
 
@@ -96,14 +100,7 @@ You can compile with -mno-red-zone to stop the compiler from using space below t
 TODO:
 
 **** clean up lexer - repeating code
-**** remove params from symtabs
 **** add unary operator support
-
-next up - assembly generation
-
-registers
---
-useful structure to use in the asm_gen phase
 
 labels
 --
