@@ -4,15 +4,15 @@
 
 Outputs `x86 64-bit assembly`, nasm & gcc are used from there to create the binary file.
 
-The goal is to compile basic programs, `#include`'s, `typedefs` and other fancy things are forbidden.
+The goal is to compile basic programs, `#includes`, `typedefs` and other fancy things are forbidden.
 
-Simplicity is valued more highly than support for C more features. Will try to keep the entire thing under 3000 lines.
+Simplicity is valued more highly than support for more features. Will try to keep the entire thing under 3000 lines.
 
 Will not compile itself. Unless things get out of hand.
 
 **Work in progress**
 
-Example:
+An example of what `bcc` can do as of now:
 
 ```
 $ DEBUG=SCOPE,ASM ./bcc tests/test8.c && ./build.sh
