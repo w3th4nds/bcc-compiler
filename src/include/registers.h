@@ -35,6 +35,8 @@ typedef struct {
 RegisterManager_t *init_register_manager(void);
 char *get_param_register(int param_n);
 char *get_register(RegisterManager_t *reg_manager);
+char *get_used_register(RegisterManager_t *reg_manager, int last_used_idx);
+void free_register(RegisterManager_t *reg_manager, char *reg);
 char *paramreg_enum_to_str(GenReg reg);
 char *genreg_enum_to_str(GenReg reg);
 int genreg_str_to_enum(char *reg);

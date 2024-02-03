@@ -23,6 +23,20 @@ char *get_register(RegisterManager_t *reg_manager)
   return NULL;
 }
 
+// last_used_idx - choose which used reg to get
+// 1 = last used
+// TODO: make less confusing
+char *get_used_register(RegisterManager_t *reg_manager, int last_used_idx)
+{
+  int n = 1;
+  for (GenReg i = (GenRegs_end-1); i >= 0; --i) {
+    if (reg_manager->inuse[i] && n++ == last_used_idx)
+      return genreg_enum_to_str(i);
+  }
+  error_exit("get_used_register() - could not find requested register\n");
+  return NULL;
+}
+
 void free_register(RegisterManager_t *reg_manager, char *reg)
 {
   reg_manager->inuse[genreg_str_to_enum(reg)] = false;
@@ -52,11 +66,12 @@ char *genreg_enum_to_str(GenReg reg)
     case r13: return "r13";
     case r14: return "r14";
     case r15: return "r15";
-    default: error_exit("genreg_enum_to_str() - unknown reg enum\n");
+    default: 
+      printf("reg = %d\n", reg);
+      error_exit("genreg_enum_to_str() - unknown reg enum\n");
   }
   return NULL;
 }
-
 
 int genreg_str_to_enum(char *reg)
 {
