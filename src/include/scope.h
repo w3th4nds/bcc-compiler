@@ -6,6 +6,7 @@
 #include "AST.h"
 #include "symtab.h"
 #include "hashmap.h"
+#include <assert.h>
 
 typedef struct {
   Scope_t **scopes;

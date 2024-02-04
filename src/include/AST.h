@@ -22,7 +22,7 @@
     - body
   AST_CALL:
     - name
-    - children (=params - list of AST_NUMs, AST_IDs, AST_CALLs)
+    - children (=args - list of AST_NUMs, AST_IDs, AST_CALLs)
   AST_ASSIGNMENT:
     - decl (if it includes one)
     - name (if it does not include a decl)

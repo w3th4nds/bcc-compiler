@@ -6,10 +6,10 @@ RegisterManager_t *init_register_manager(void)
   return reg_manager;
 }
 
-char *get_param_register(int param_n, size_t size)
+char *get_arg_register(int arg_n, size_t size)
 {
-  assert(param_n < ParamRegs_end && "Up to 4 parameters supported");
-  return paramreg_enum_to_str(param_n, size);
+  assert(arg_n < ArgRegs_end && "Up to 4 arguments supported");
+  return argreg_enum_to_str(arg_n, size);
 }
 
 char *get_register(RegisterManager_t *reg_manager, size_t size)
@@ -42,7 +42,7 @@ void free_register(RegisterManager_t *reg_manager, char *reg)
   reg_manager->inuse[genreg_str_to_enum(reg)] = NOT_INUSE;
 }
 
-char *paramreg_enum_to_str(GenReg reg, size_t size)
+char *argreg_enum_to_str(GenReg reg, size_t size)
 {
   switch(reg) {
     case rdi: return size == 8 ? "rdi" : "edi";
@@ -51,25 +51,25 @@ char *paramreg_enum_to_str(GenReg reg, size_t size)
     case rcx: return size == 8 ? "rcx" : "ecx";
     default: 
       printf("reg = %d\n", reg);
-      error_exit("paramreg_enum_to_str() - unknown reg enum\n");
+      error_exit("argreg_enum_to_str() - unknown reg enum\n");
   }
   return NULL;
 }
 
 char *genreg_enum_to_str(GenReg reg, size_t size)
 {
-  // nasm does not support r8l - r15l
-  // so only rbx gets 4-byte variant
+  // https://www.cs.uaf.edu/2017/fall/cs301/reference/x86_64.html nasm cheat sheet
+  // not supporting anything lower than 32-bit
   switch(reg) {
     case rbx: return size == 8 ? "rbx" : "ebx";
-    case r8:  return "r8";
-    case r9:  return "r9";
-    case r10: return "r10";
-    case r11: return "r11";
-    case r12: return "r12";
-    case r13: return "r13";
-    case r14: return "r14";
-    case r15: return "r15";
+    case r8:  return size == 8 ? "r8"  : "r8d";
+    case r9:  return size == 8 ? "r9"  : "r9d";
+    case r10: return size == 8 ? "r10" : "r10d";
+    case r11: return size == 8 ? "r11" : "r11d";
+    case r12: return size == 8 ? "r12" : "r12d";
+    case r13: return size == 8 ? "r13" : "r13d";
+    case r14: return size == 8 ? "r14" : "r14d";
+    case r15: return size == 8 ? "r15" : "r15d";
     default: 
       printf("reg = %d\n", reg);
       error_exit("genreg_enum_to_str() - unknown reg enum\n");
@@ -80,9 +80,6 @@ char *genreg_enum_to_str(GenReg reg, size_t size)
 GenReg genreg_str_to_enum(char *reg)
 {
   for (GenReg i = 0; i < GenRegs_end; ++i) {
-    // almost all 4-byte variants are not supported by nasm
-    // but this is fine since genreg_str_to_enum()
-    // is only used by free_register() to set RegState to NOT_INUSE
     if (strcmp(reg, genreg_enum_to_str(i, 8)) == 0 || \
         strcmp(reg, genreg_enum_to_str(i, 4)) == 0)
       return i;

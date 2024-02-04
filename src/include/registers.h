@@ -12,14 +12,14 @@ typedef enum {
 } RegState;
 
 // Up to 4 args support
-// Parameter Registers
+// Argument Registers
 typedef enum {
   rdi = 0,
   rsi,
   rdx,
   rcx,
-  ParamRegs_end
-} ParamReg;
+  ArgRegs_end
+} ArgReg;
 
 // General Purpose Regs
 typedef enum {
@@ -41,11 +41,11 @@ typedef struct {
 } RegisterManager_t;
 
 RegisterManager_t *init_register_manager(void);
-char *get_param_register(int param_n, size_t size);
+char *get_arg_register(int arg_n, size_t size);
 char *get_register(RegisterManager_t *reg_manager, size_t size);
 char *get_used_register(RegisterManager_t *reg_manager, int last_used_idx, size_t size);
 void free_register(RegisterManager_t *reg_manager, char *reg);
-char *paramreg_enum_to_str(GenReg reg, size_t size);
+char *argreg_enum_to_str(GenReg reg, size_t size);
 char *genreg_enum_to_str(GenReg reg, size_t size);
 GenReg genreg_str_to_enum(char *reg);
 

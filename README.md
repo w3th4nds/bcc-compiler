@@ -8,6 +8,8 @@ The goal is to compile basic programs, `#includes`, `typedefs` and other fancy t
 
 Simplicity is valued more highly than support for more features. Will try to keep the entire thing under 3000 lines.
 
+Taking inspiration from other (hobby) compilers, **no** memory management **is** the memory management scheme here.
+
 Will not compile itself. Unless things get out of hand.
 
 **Work in progress**
@@ -104,6 +106,7 @@ You can compile with -mno-red-zone to stop the compiler from using space below t
 
 TODO:
 
+******* maybe something wrong with parsing binops, test11.c is proof
 **** clean up lexer - repeating code
 **** add unary operator support
 

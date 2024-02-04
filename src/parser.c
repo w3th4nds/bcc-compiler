@@ -202,7 +202,7 @@ AST_t *parser_parse_term(Parser_t *parser)
     ast_binop->left = ast_left;
     ast_binop->op = parser->token->kind;
     parser_eat(parser, parser->token->kind);
-    ast_binop->right = parser_parse_factor(parser);
+    ast_binop->right = parser_parse_expr(parser);
     return ast_binop;
   }
   return ast_left;

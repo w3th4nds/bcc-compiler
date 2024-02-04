@@ -61,16 +61,13 @@ char *asm_func_def(AsmCtx_t *ctx)
   char *code = calloc(sz, sizeof(char));
   snprintf(code, sz, template, scope->scope_id);
 
-  // TODO: make params work
+  // TODO: implement params
+  // search no only in the current scope's symtab,
+  // but in params too
+  // eventually even global scope
   // ...
 
-  // account for 128-byte stack red-zone (see notes)
-  // allocate stack space as necessary
-  if (scope->symtab->offset > 128) {
-    code = realloc(code, strlen(code) + 32);
-    snprintf(code+strlen(code), 32, "sub rsp, 0x%x\n", scope->symtab->offset - 128);
-  }
-
+  char *func_code = calloc(1, sizeof(char));
   char *next_code;
   List_t *list = ctx->node->body->children;
   for (int i = 0; i < list->size; ++i) {
@@ -78,14 +75,31 @@ char *asm_func_def(AsmCtx_t *ctx)
     switch (ctx->node->node_type) {
       case AST_RETURN:      next_code = asm_return(ctx);      break;
       case AST_ASSIGNMENT:  next_code = asm_assignment(ctx);  break;
-      case AST_DECL: break; // does nothing
+      case AST_DECL: break; // does nothing in asm phase
       default:
         printf("child node_type = %s\n", AST_type_to_str(ctx->node->node_type));
         error_exit("asm_func_def() - default reached\n");
     }
-    code = realloc(code, strlen(code) + strlen(next_code) + 1);
-    strcat(code, next_code);
+    func_code = realloc(func_code, strlen(func_code) + strlen(next_code) + 1);
+    strcat(func_code, next_code);
   }
+
+  // account for 128-byte stack red-zone (see notes)
+  // allocate stack space as necessary
+  // ********************************************
+  // TODO: figure out a way to tell if function is a leaf function
+  // if this applies, we need to add a "leave ret" as well
+  /*
+  if (strcmp(scope->scope_id, "main") == 0) {
+    char *subrsp_template = "sub rsp, 0x%x\n";
+    size_t subrsp_sz = strlen(subrsp_template) + 24;
+    code = realloc(code, strlen(code) + subrsp_sz);
+    snprintf(code+strlen(code), subrsp_sz, subrsp_template, scope->symtab->offset + scope->symtab->offset % 8);
+  }
+  */
+
+  code = realloc(code, strlen(code) + strlen(func_code) + 1);
+  strcat(code, func_code);
   return code;
 }
 
@@ -98,7 +112,7 @@ char *asm_return(AsmCtx_t *ctx)
   char *code, *template;
   switch(ctx->node->value->node_type) {
     case AST_NUM:
-      template = "mov %s, 0x%x\npop rbp\nret\n\n";
+      template = "mov %s, 0x%x\n";
       sz = strlen(template) + 24;
       code = calloc(sz, sizeof(char));
       snprintf(code, sz, template, ret_reg, ctx->node->value->num_value);
@@ -153,6 +167,7 @@ char *asm_assignment(AsmCtx_t *ctx)
   SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, id);
   char *code, template[64] = {0};
   size_t sz;
+  // template for AST_NUM & AST_BINOP - AST_ID uses proxy_template
   switch (entry->size) {
     case 1: strcpy(template, "mov byte [rbp-0x%x], ");  break;
     case 2: strcpy(template, "mov word [rbp-0x%x], ");  break;
@@ -161,16 +176,33 @@ char *asm_assignment(AsmCtx_t *ctx)
     default: error_exit("asm_assignment() - size check default reached\n");
   }
 
-  switch (ctx->node->value->node_type) {
+  AST_t *assigned_node = ctx->node->value;
+  switch (assigned_node->node_type) {
     case AST_NUM:
-      long value = ctx->node->value->num_value;
       strcat(template, "0x%x\n");
       sz = strlen(template) + 24;
       code = calloc(sz, sizeof(char));
-      snprintf(code, sz, template, entry->offset, value);
+      snprintf(code, sz, template, entry->offset, assigned_node->num_value);
+      break;
+    case AST_ID:
+      // a proxy register has to be used
+      SymtabEntry_t *assigned_entry = scope_getsymtabentry(ctx->scope_manager, assigned_node->name);
+      char *proxy_reg = assigned_entry->size == 8 ? "rax" : "eax";
+      char *assign_reg = entry->size == 8 ? "rax" : "eax";
+      char *proxy_template;
+      switch (assigned_entry->size) {
+        case 1: proxy_template = "mov %s, byte [rbp-0x%x]\nmov byte [rbp-0x%x], %s\n";    break;
+        case 2: proxy_template = "mov %s, word [rbp-0x%x]\nmov word [rbp-0x%x], %s\n";    break;
+        case 4: proxy_template = "mov %s, dword [rbp-0x%x]\nmov dword [rbp-0x%x], %s\n";  break;
+        case 8: proxy_template = "mov %s, qword [rbp-0x%x]\nmov qword [rbp-0x%x], %s\n";  break;
+        default: error_exit("asm_assignment - AST_ID default case reached\n");
+      }
+      sz = strlen(proxy_template) + 48;
+      code = calloc(sz, sizeof(char));
+      snprintf(code, sz, proxy_template, proxy_reg, assigned_entry->offset, entry->offset, assign_reg);
       break;
     case AST_BINOP:
-      BinopResult_t *res = binop_evaluate(ctx, ctx->node->value);
+      BinopResult_t *res = binop_evaluate(ctx, assigned_node);
       if (res->computed) {
         strcat(template, "0x%x\n");
         sz = strlen(template) + 24;
@@ -187,7 +219,6 @@ char *asm_assignment(AsmCtx_t *ctx)
         free_register(ctx->reg_manager, result_reg);
       }
       break;
-    case AST_ID:
     default:
       error_exit("asm_assignment() - default reached\n");
   }
@@ -201,23 +232,21 @@ char *asm_call(AsmCtx_t *ctx, AST_t *node)
   char *template;
   size_t sz;
   Scope_t *call_scope = scope_getscopebyid(ctx->scope_manager, node->name);
-  // put params in registers
-  List_t *params = node->children;
-  for (int i = 0; i < params->size; ++i) {
-    AST_t *param = params->items[i];            // param -> value passed to function
-    AST_t *arg = call_scope->params->items[i];  // arg   -> declared in funcdef
-    char *reg = get_param_register(i, type_size(arg->specs_type));
-    switch (param->node_type) {
+  // put args in registers
+  List_t *args = node->children;
+  for (int i = 0; i < args->size; ++i) {
+    AST_t *arg = args->items[i];                  // arg   -> value passed to function
+    AST_t *param = call_scope->params->items[i];  // param -> declared in funcdef
+    char *reg = get_arg_register(i, type_size(param->specs_type));
+    switch (arg->node_type) {
       case AST_NUM:
         template = "mov %s, 0x%x\n";
         sz = strlen(template) + 24;
         code = realloc(code, strlen(code) + sz);
-        snprintf(code+strlen(code), sz, template, reg, param->num_value);
+        snprintf(code+strlen(code), sz, template, reg, arg->num_value);
         break;
       case AST_ID:
-        // TODO: fix repeating code, make more defined templates
-        // ugly embedded switch stmt
-        SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, param->name);
+        SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, arg->name);
         switch (entry->size) {
           case 1: template = "mov %s, byte [rbp-0x%x]\n";  break;
           case 2: template = "mov %s, word [rbp-0x%x]\n";  break;
@@ -229,7 +258,7 @@ char *asm_call(AsmCtx_t *ctx, AST_t *node)
         code = realloc(code, sz);
         snprintf(code, sz, template, reg, entry->offset);
         break;
-      default: error_exit("asm_call - param default case reached\n");
+      default: error_exit("asm_call - default case reached\n");
     }
   }
   char *call_template = "call %s\n";
@@ -269,18 +298,18 @@ long binop_evaluate_(AST_t *node)
 {
   if (ASM_DEBUG) printf("binop_evaluate_()\n");
   switch (node->node_type) {
+    case AST_NUM: return node->num_value;
     case AST_BINOP:
       switch (node->op) {
-        case TOKEN_PLUS: return binop_evaluate_(node->left) + binop_evaluate_(node->right);
+        case TOKEN_PLUS:  return binop_evaluate_(node->left) + binop_evaluate_(node->right);
         case TOKEN_MINUS: return binop_evaluate_(node->left) - binop_evaluate_(node->right);
-        case TOKEN_MUL: return binop_evaluate_(node->left) * binop_evaluate_(node->right);
-        case TOKEN_DIV: return binop_evaluate_(node->left) / binop_evaluate_(node->right);
+        case TOKEN_MUL:   return binop_evaluate_(node->left) * binop_evaluate_(node->right);
+        case TOKEN_DIV:   return binop_evaluate_(node->left) / binop_evaluate_(node->right);
         default: error_exit("binop_evaluate_() - unknown op\n");
       }
-    case AST_NUM: return node->num_value;
     default: error_exit("binop_evaluate_() - default reached\n");
   }
-  return 0; // get rid of compiler warnings
+  return 0;
 }
 
 // post-order traversal of the AST
@@ -293,6 +322,7 @@ void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res)
   char *next_code;
   char *template;
   size_t sz;
+  char *regA, *regB;
   switch (node->node_type) {
     case AST_NUM:
       template = "mov %s, 0x%x\n";
@@ -317,19 +347,31 @@ void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res)
       switch (node->op) {
         case TOKEN_PLUS:  template = "add %s, %s\n";  break;
         case TOKEN_MINUS: template = "sub %s, %s\n";  break;
-        case TOKEN_MUL:   template = "imul %s, %s\n";  break;
-        case TOKEN_DIV:   template = "idiv %s, %s\n";  break;
+        case TOKEN_MUL:   template = "imul %s, %s\n"; break;
+        case TOKEN_DIV:   template = "idiv %s, %s\n"; break;
         default: error_exit("binop_get_code() - AST_BINOP probably implement something\n");
       }
       sz = strlen(template) + 16;
       next_code = calloc(sz, sizeof(char));
-      // TODO: fix 8 (?)
-      char *regA = get_used_register(ctx->reg_manager, 2, 8);
-      char *regB = get_used_register(ctx->reg_manager, 1, 8);
+      // TODO: fix hardcode 8-byte size (?)
+      // is there a point to use the lower 4-byte of registers here ?
+      regA = get_used_register(ctx->reg_manager, 2, 8);
+      regB = get_used_register(ctx->reg_manager, 1, 8);
       snprintf(next_code, sz, template, regA, regB);
       free_register(ctx->reg_manager, regB);
       break;
     case AST_CALL:
+      next_code = asm_call(ctx, node);
+      Scope_t *call_scope = scope_getscopebyid(ctx->scope_manager, node->name);
+      char *ret_reg = type_size(call_scope->specs_type) == 8 ? "rax" : "eax";
+      regA = get_register(ctx->reg_manager, type_size(call_scope->specs_type));
+      template = "mov %s, %s\n";
+      sz = strlen(template) + 8;
+      char *mov_result = calloc(sz, sizeof(char));
+      snprintf(mov_result, sz, template, regA, ret_reg);
+      next_code = realloc(next_code, strlen(next_code) + sz);
+      strcat(next_code, mov_result);
+      break;
     default: error_exit("binop_get_code() - probably implement something\n");
   }
   res->code = realloc(res->code, strlen(res->code) + strlen(next_code) + 1);

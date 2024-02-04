@@ -59,7 +59,7 @@ void scope_add_to_symtab(ScopeManager_t *scope_manager, int type, char *name)
 }
 
 // specify function return type
-// and the parameters the current function
+// and the parameters of the current function
 void scope_add_specs(ScopeManager_t *scope_manager, int type, List_t *params)
 {
   if (hashmap_key_exists(scope_manager->scopes, scope_manager->current_scope_id))
@@ -70,12 +70,14 @@ void scope_add_specs(ScopeManager_t *scope_manager, int type, List_t *params)
 
 Scope_t *scope_getcurrentscope(ScopeManager_t *scope_manager)
 {
+  assert(scope_manager->current_scope_id != NULL && "scope_getcurrentscope() - current_scope_id is NULL\n");
   Scope_t *scope = hashmap_getscope(scope_manager->scopes, scope_manager->current_scope_id);
   return scope;
 }
 
 Scope_t *scope_getscopebyid(ScopeManager_t *scope_manager, char *scope_id)
 {
+  assert(scope_id != NULL && "scope_getscopebyid() - scope_id is NULL\n");
   Scope_t *scope = hashmap_getscope(scope_manager->scopes, scope_id);
   return scope;
 }
@@ -83,6 +85,7 @@ Scope_t *scope_getscopebyid(ScopeManager_t *scope_manager, char *scope_id)
 // search for an entry id in the current scope
 SymtabEntry_t *scope_getsymtabentry(ScopeManager_t *scope_manager, char *entry_id)
 {
+  assert(entry_id != NULL && "scope_getsymtabentry() - entry_id is NULL\n");
   SymtabEntry_t *entry = hashmap_getsymtabentry(scope_manager->scopes, scope_manager->current_scope_id, entry_id);
   return entry;
 }
