@@ -34,6 +34,7 @@ void bcc_compile(char *src)
 {
   // inits
   init_debug();
+  if (PLOT_EXPR)   system("rm pyutil/AST_BFS_*");
   if (SHOW_SOURCE) printf("Source Code:\n%s\n", src);
   Lexer_t *lexer = init_lexer(src);
   ScopeManager_t *scope_manager = init_scope_manager();
@@ -45,6 +46,7 @@ void bcc_compile(char *src)
   if (ASM_DEBUG) printf("\nGenerated ASM =\n%s", generated_assembly);
   bcc_write_asm("out.s", generated_assembly);
   printf("[ SUCCESS ]\n");
+  if (PLOT_EXPR) system("cd pyutil/ && ./plot.py && cd -");
 }
 
 void bcc_compile_file(char *fname)

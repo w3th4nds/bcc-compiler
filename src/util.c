@@ -34,6 +34,7 @@ char *format(AST_t *node)
 // perform level order traversal on the root node of the AST
 // to be used for visualization with python
 // TODO: clean up
+
 void create_ast_file(AST_t *expr, int expr_n)
 {
   List_t *list = init_list(sizeof(char *));
