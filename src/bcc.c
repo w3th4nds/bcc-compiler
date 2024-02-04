@@ -44,6 +44,12 @@ void bcc_compile(char *src)
   char *generated_assembly = asm_generate(scope_manager, root);
   if (ASM_DEBUG) printf("\nGenerated ASM =\n%s", generated_assembly);
   bcc_write_asm("out.s", generated_assembly);
+  /*
+  AST_t *x = root->children->items[1];
+  AST_t *y = x->body->children->items[1];
+  AST_t *expr = y->value;
+  create_ast_file(expr);
+  */
 
   printf("[ SUCCESS ]\n");
 }

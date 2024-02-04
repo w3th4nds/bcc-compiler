@@ -4,6 +4,7 @@
 #include "list.h"
 #include "AST.h"
 #include "token.h"
+#include "debug.h"
 #include <stdio.h>
 #include <string.h>
 

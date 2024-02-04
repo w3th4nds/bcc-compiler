@@ -1,32 +1,18 @@
 #!/usr/bin/env python3
+from dsplot.tree import BinaryTree
+import webbrowser
 
 # not in use
 
-class node(object):
-	def __init__(self, value, children = []):
-		self.value = value
-		self.children = children
-
-	def __str__(self, level=0):
-		ret = "\t"*level+repr(self.value)+"\n"
-		for child in self.children:
-			ret += child.__str__(level+1)
-		return ret
-
-	def __repr__(self):
-		return '<tree node representation>'
-
 def make_graph():
   with open('AST_BFS.txt', 'r') as f:
-    lines = [l.strip().split(',')[:-1] for l in f.readlines()]
+    nodes = [l.strip() for l in f.readlines()]
 
-  target = dict()
-  for l in lines:
-    target.update({l[0]: l[1:]})
-  print(target)
+  while (nodes[-1] == "NULL"): nodes = nodes[:-1] # remove trailing NULLs
+  for i in range(len(nodes)): nodes[i] = None if nodes[i] == "NULL" else nodes[i]
 
-  graph = Graph(target, directed=True)
-  graph.plot(orientation='UD', fill_color='#aec6cf')
+  tree = BinaryTree(nodes=nodes)
+  tree.plot(output_path='graph.png', border_color='#FFCE30', fill_color='#aec6cf')
   webbrowser.open('graph.png')
 
     

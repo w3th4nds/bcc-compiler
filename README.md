@@ -107,6 +107,7 @@ You can compile with -mno-red-zone to stop the compiler from using space below t
 TODO:
 
 ******* maybe something wrong with parsing binops, test11.c is proof
+******* get puts working to print outside the range of [0, 255]
 **** clean up lexer - repeating code
 **** add unary operator support
 
