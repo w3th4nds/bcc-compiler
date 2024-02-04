@@ -9,6 +9,6 @@
 #include <string.h>
 
 char *format(AST_t *node);
-void create_ast_file(AST_t *root);
+void create_ast_file(AST_t *expr, int expr_n);
 
 #endif

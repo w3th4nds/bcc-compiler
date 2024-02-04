@@ -2,12 +2,11 @@
 #define _ASM_GEN_H_
 
 #include "debug.h"
+#include "util.h"
 #include "AST.h"
 #include "scope.h"
 #include "hashmap.h"
 #include "registers.h"
-//#include "asm_templates/return_template.h"
-//#include "asm_templates/funcdef_template.h"
 #include <stdlib.h>
 #include <assert.h>
 

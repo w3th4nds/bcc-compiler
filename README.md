@@ -6,6 +6,8 @@ Outputs `x86 64-bit assembly`, nasm & gcc are used from there to create the bina
 
 The goal is to compile basic programs, `#includes`, `typedefs` and other fancy things are forbidden.
 
+This is a **non-optimizing compiler**, it doesn't make use of an intermediate representation phase.
+
 Simplicity is valued more highly than support for more features. Will try to keep the entire thing under 3000 lines.
 
 Taking inspiration from other (hobby) compilers, **no** memory management **is** the memory management scheme here.
@@ -17,7 +19,8 @@ Will not compile itself. Unless things get out of hand.
 An example of what `bcc` can do as of now:
 
 ```
-$ DEBUG=SCOPE,ASM ./bcc tests/test8.c && ./build.sh
+$  DEBUG=SCOPE,ASM ./bcc tests/test11.c && ./build.sh 
+
 DEBUGGING:
     LEX = 0
   PARSE = 0
@@ -25,19 +28,20 @@ DEBUGGING:
     ASM = 1
 
 Source Code:
+// should return 50
 int main(void)
 {
-  int dummy = 1;
-  long b = 30;
-  long a = 5;
-  return a + 2 * b;
+  int y = 5 * 3 * ((4 + 3) * 10) - 1040;
+  long x = 0x10;
+  int a = x + y * 2;
+  return a + 7 * 2;
 }
 
 Setting scope -> global
 Setting scope -> "main"
-Current_scope: main - adding: "dummy" TYPE_INT
-Current_scope: main - adding: "b" TYPE_LONG
-Current_scope: main - adding: "a" TYPE_LONG
+Current_scope: main - adding: "y" TYPE_INT
+Current_scope: main - adding: "x" TYPE_LONG
+Current_scope: main - adding: "a" TYPE_INT
 
 Global scope:
 Symtab:
@@ -48,18 +52,20 @@ Return type: TYPE_INT
 Params: (TYPE_VOID (null))
 Symtab:
 
-[ dummy           | TYPE_INT     | sz: 4 | off: 0x4  ]
+[ y               | TYPE_INT     | sz: 4 | off: 0x4  ]
 ------------------------------------------------------
-[ b               | TYPE_LONG    | sz: 8 | off: 0x10 ]
+[ x               | TYPE_LONG    | sz: 8 | off: 0x10 ]
 ------------------------------------------------------
-[ a               | TYPE_LONG    | sz: 8 | off: 0x18 ]
+[ a               | TYPE_INT     | sz: 4 | off: 0x14 ]
 ---
 asm_generate()
 asm_func_def()
 Setting scope -> "main"
 asm_assignment()
+binop_evaluate()
 asm_assignment()
 asm_assignment()
+binop_evaluate()
 asm_return()
 binop_evaluate()
 
@@ -71,24 +77,28 @@ section .text
 main:
 push rbp
 mov rbp, rsp
-mov dword [rbp-0x4], 0x1
-mov qword [rbp-0x10], 0x1e
-mov qword [rbp-0x18], 0x5
-mov rbx, qword [rbp-0x18]
-mov r8, 0x2
-mov r9, qword [rbp-0x10]
+mov dword [rbp-0x4], 0xa
+mov qword [rbp-0x10], 0x10
+mov rbx, qword [rbp-0x10]
+mov r8d, dword [rbp-0x4]
+mov r9, 0x2
 imul r8, r9
 add rbx, r8
-mov rax, rbx
+mov dword [rbp-0x14], ebx
+mov ebx, dword [rbp-0x14]
+mov r8, 0x7
+mov r9, 0x2
+imul r8, r9
+add rbx, r8
+mov eax, ebx
 pop rbp
 ret
 
 [ SUCCESS ]
 [*] Building asm into executable...
 [*] Running it and checking the return value
-65
+50
 ```
-
 
 **Notes:**
 
@@ -106,7 +116,7 @@ You can compile with -mno-red-zone to stop the compiler from using space below t
 
 TODO:
 
-******* maybe something wrong with parsing binops, test11.c is proof
+********** implement leaf function detection in asm phase
 ******* get puts working to print outside the range of [0, 255]
 **** clean up lexer - repeating code
 **** add unary operator support

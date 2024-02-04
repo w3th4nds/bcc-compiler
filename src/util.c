@@ -1,11 +1,6 @@
 #include "include/util.h"
 
-/*
-
-This code is not being used and does not work.
-Will fix at some point.
-
-*/
+// TODO: expand this to make it print out entire source code AST, not just expressions
 
 char *format(AST_t *node)
 {
@@ -13,6 +8,12 @@ char *format(AST_t *node)
   switch (node->node_type) {
     case AST_NUM:
       snprintf(buf, 50, "NUM: %ld\n", node->num_value);
+      break;
+    case AST_ID:
+      snprintf(buf, 50, "ID: %s\n", node->name);
+      break;
+    case AST_CALL:
+      snprintf(buf, 50, "CALL: %s\n", node->name);
       break;
     case AST_BINOP:
       char op[2] = {0};
@@ -32,14 +33,14 @@ char *format(AST_t *node)
 
 // perform level order traversal on the root node of the AST
 // to be used for visualization with python
-void create_ast_file(AST_t *binop)
+// TODO: clean up
+void create_ast_file(AST_t *expr, int expr_n)
 {
-  printf("type = %s\n", AST_type_to_str(binop->node_type));
   List_t *list = init_list(sizeof(char *));
-  list_push(list, format(binop));
+  list_push(list, format(expr));
 
   List_t *queue = init_list(sizeof(AST_t *));
-  list_push(queue, binop);
+  list_push(queue, expr);
 
   int cnt = 0;
   while (queue->size) {
@@ -47,7 +48,7 @@ void create_ast_file(AST_t *binop)
     AST_t *node = (AST_t *)list_getitem(queue, 0);
     list_pop_first(queue);
     if (node == NULL) continue;
-    if (node->node_type == AST_NUM) {
+    if (node->node_type != AST_BINOP) {
       char *buf = calloc(6, sizeof(char));
       strcpy(buf, "NULL\n");
       list_push(list, buf);
@@ -60,9 +61,9 @@ void create_ast_file(AST_t *binop)
     list_push(queue, node->left);
     list_push(queue, node->right);
   }
-  printf("total nodes = %d\n", cnt);
-  
-  char *path = "pyutil/AST_BFS.txt";
+  char *path_ = "pyutil/AST_BFS_%d.txt";
+  char path[36] = {0};
+  snprintf(path, 36, path_, expr_n);
   FILE *fp;
   if ((fp = fopen(path, "w")) == NULL) {
     printf("Error opening %s\n", path);

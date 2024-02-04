@@ -272,7 +272,8 @@ BinopResult_t *binop_evaluate(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("binop_evaluate()\n");
   assert(node->node_type == AST_BINOP && "binop_evaluate() - node is not a binop");
-  printf("eval node op = %s\n", token_kind_to_str(node->op));
+  static int expr_n = 0;
+  if (PLOT_EXPR) create_ast_file(node, expr_n++);
   BinopResult_t *res = calloc(1, sizeof(BinopResult_t));
   res->computed = binop_iscomputable(node);
   if (res->computed) {
@@ -298,32 +299,20 @@ bool binop_iscomputable(AST_t *node)
 // if binop is computable, use this
 long binop_evaluate_(AST_t *node)
 {
-  if (ASM_DEBUG) printf("binop_evaluate_()\n");
-  long x = 0;
   switch (node->node_type) {
     case AST_NUM: return node->num_value;
     case AST_BINOP:
       switch (node->op) {
-        case TOKEN_PLUS:  
-          x = binop_evaluate_(node->left) + binop_evaluate_(node->right);
-          break;
-        case TOKEN_MINUS: 
-          x = binop_evaluate_(node->left) - binop_evaluate_(node->right);
-          break;
-        case TOKEN_MUL:   
-          x = binop_evaluate_(node->left) * binop_evaluate_(node->right);
-          break;
-        case TOKEN_DIV:   
-          x = binop_evaluate_(node->left) / binop_evaluate_(node->right);
-          break;
+        case TOKEN_PLUS:  return binop_evaluate_(node->left) + binop_evaluate_(node->right);
+        case TOKEN_MINUS: return binop_evaluate_(node->left) - binop_evaluate_(node->right);
+        case TOKEN_MUL:   return binop_evaluate_(node->left) * binop_evaluate_(node->right);
+        case TOKEN_DIV:   return binop_evaluate_(node->left) / binop_evaluate_(node->right);
         default: error_exit("binop_evaluate_() - unknown op\n");
       }
       break;
     default: error_exit("binop_evaluate_() - default reached\n");
   }
-  printf("x = %ld\n", x);
-  return x;
-  //return 0;
+  return 0;
 }
 
 // post-order traversal of the AST
