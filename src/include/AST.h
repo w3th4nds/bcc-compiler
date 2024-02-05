@@ -62,6 +62,8 @@ typedef struct AST_STRUCT {
   struct AST_STRUCT *decl;
   struct AST_STRUCT *body;
   List_t *children;
+  // only used for creating graphs
+  long node_id;
 } AST_t;
 
 AST_t *init_ast(int node_type);

@@ -6,7 +6,7 @@
 #include <string.h>
 
 extern int SHOW_SOURCE;
-extern int PLOT_EXPR;
+extern int GRAPH;
 extern int LEX_DEBUG;
 extern int PARSE_DEBUG;
 extern int SCOPE_DEBUG;

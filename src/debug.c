@@ -1,7 +1,7 @@
 #include "include/debug.h"
 
 int SHOW_SOURCE = 1; // will be changed to 0 when everything is working
-int PLOT_EXPR = 0;
+int GRAPH = 0; // create graph of the parsed AST
 int LEX_DEBUG = 0;
 int PARSE_DEBUG = 0;
 int SCOPE_DEBUG = 0;
@@ -12,8 +12,8 @@ void init_debug(void)
   char *show_src = getenv("SHOW_SOURCE");
   if (show_src != NULL && strcmp(show_src, "0") == 0) SHOW_SOURCE = 0;
 
-  char *plot_expr = getenv("PLOT_EXPR");
-  if (plot_expr != NULL && strcmp(plot_expr, "1") == 0) PLOT_EXPR = 1;
+  char *plot_expr = getenv("GRAPH");
+  if (plot_expr != NULL && strcmp(plot_expr, "1") == 0) GRAPH = 1;
 
   char *debug = getenv("DEBUG");
   if (debug == NULL) return;

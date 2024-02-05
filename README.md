@@ -19,7 +19,7 @@ Will not compile itself. Unless things get out of hand.
 An example of what `bcc` can do as of now:
 
 ```
-$ PLOT_EXPR=1 ./bcc tests/test11.c && echo "\nGenerated assembly:" && cat out.s && ./build.sh
+$ GRAPH=1 ./bcc tests/test11.c && echo "\nGenerated assembly:" && cat out.s && ./build.sh
 
 Source Code:
 long dummy(void)
@@ -36,11 +36,6 @@ int main(void)
   int a = x + y * 2;
   return a + 7 * 2;
 }
-
-[*] Creating graph for: AST_BFS_0.txt
-[*] Creating graph for: AST_BFS_1.txt
-[*] Creating graph for: AST_BFS_2.txt
-[*] Creating graph for: AST_BFS_3.txt
 
 Generated assembly:
 global dummy
@@ -98,7 +93,7 @@ ret
 
 ```
 
-**Expression AST graph for `y` variable assignment:**
+**Generated AST graph for the above source:**
 
 ![](assets/example_AST_graph.png)
 

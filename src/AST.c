@@ -2,7 +2,9 @@
 
 AST_t *init_ast(int node_type)
 {
+  static long node_id = 0;
   AST_t *ast = calloc(1, sizeof(AST_t));
+  ast->node_id = node_id++;
   ast->node_type = node_type;
   if (node_type == AST_COMPOUND || node_type == AST_CALL)
     ast->children = init_list(sizeof(AST_t *));

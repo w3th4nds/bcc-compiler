@@ -5,10 +5,12 @@
 #include "AST.h"
 #include "token.h"
 #include "debug.h"
+#include "types.h"
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 char *format(AST_t *node);
-void create_ast_file(AST_t *expr, int expr_n);
+void make_ast_graph(AST_t *expr);
 
 #endif

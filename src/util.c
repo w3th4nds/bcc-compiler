@@ -1,70 +1,107 @@
 #include "include/util.h"
 
-// TODO: expand this to make it print out entire source code AST, not just expressions
-
 char *format(AST_t *node)
 {
-  char *buf = calloc(50, sizeof(char));
+  size_t sz = 256;
+  char *buf = calloc(sz, sizeof(char));
+  snprintf(buf, sz, "[%ld] ", node->node_id);
   switch (node->node_type) {
     case AST_NUM:
-      snprintf(buf, 50, "NUM: %ld\n", node->num_value);
+      snprintf(buf+strlen(buf), sz, "NUM: %ld,", node->num_value);
       break;
     case AST_ID:
-      snprintf(buf, 50, "ID: %s\n", node->name);
+      snprintf(buf+strlen(buf), sz, "ID: %s,", node->name);
       break;
     case AST_CALL:
-      snprintf(buf, 50, "CALL: %s()\n", node->name);
+      snprintf(buf+strlen(buf), sz, "CALL: %s(),", node->name);
       break;
     case AST_BINOP:
       char op[2] = {0};
-      switch (node->op)
-      {
+      switch (node->op) {
         case TOKEN_PLUS:  strcpy(op, "+"); break;
         case TOKEN_MINUS: strcpy(op, "-"); break;
         case TOKEN_MUL:   strcpy(op, "*"); break;
-        case TOKEN_DIV:   strcpy(op,"/");  break;
+        case TOKEN_DIV:   strcpy(op, "/"); break;
+        default: error_exit("format() - unknown op\n");
       }
-      snprintf(buf, 50, "BINOP: \"%s\"\n", op);
+      snprintf(buf+strlen(buf), sz, "BINOP: %s,", op);
       break;
-    default: error_exit("util.c format() - default reached\n");
+    case AST_FUNCTION:
+      snprintf(buf+strlen(buf), sz, "FUNCTION: %s %s,", type_to_str(node->specs_type), node->name);
+      break;
+    case AST_RETURN:
+      strcpy(buf+strlen(buf), "RETURN,");
+      break;
+    case AST_DECL:
+      snprintf(buf+strlen(buf), sz, "DECL: %s %s,", type_to_str(node->specs_type), node->name);
+      break;
+    case AST_COMPOUND:
+      strcpy(buf+strlen(buf), "COMPOUND,");
+      break;
+    case AST_ASSIGNMENT:
+      strcpy(buf+strlen(buf), "ASSIGNMENT:,");
+      break;
+    default: error_exit("format() - default reached\n");
   }
   return buf;
 }
 
-// perform level order traversal on the root node of the AST
-// to be used for visualization with python
-// TODO: clean up
-
-void create_ast_file(AST_t *expr, int expr_n)
+// format AST in a way that can be used by plot.py
+void make_ast_graph(AST_t *root)
 {
-  List_t *list = init_list(sizeof(char *));
-  list_push(list, format(expr));
-
-  List_t *queue = init_list(sizeof(AST_t *));
-  list_push(queue, expr);
-
-  int cnt = 0;
+  assert(root != NULL && "create_ast_file - root is NULL");
+  List_t *list = init_list(sizeof(char *));   // data to write to file
+  List_t *queue = init_list(sizeof(AST_t *)); // queue to iterate on
+  list_push(queue, root);
   while (queue->size) {
-    cnt++;
     AST_t *node = (AST_t *)list_getitem(queue, 0);
+    list_push(list, format(node));
     list_pop_first(queue);
     if (node == NULL) continue;
-    if (node->node_type != AST_BINOP) {
-      char *buf = calloc(6, sizeof(char));
-      strcpy(buf, "NULL\n");
-      list_push(list, buf);
-      list_push(list, buf);
+    switch (node->node_type) {
+      // terminals
+      case AST_DECL:
+      case AST_NUM:
+      case AST_ID:
+        break;
+      case AST_BINOP:
+        list_push(list, format(node->left));
+        list_push(list, format(node->right));
+        list_push(queue, node->left);
+        list_push(queue, node->right);
+        break;
+      case AST_FUNCTION:
+        // params
+        for (int i = 0; i < node->children->size; ++i) {
+          list_push(list, format(node->children->items[i]));
+          list_push(queue, node->children->items[i]);
+        }
+        // body
+        list_push(list, format(node->body));
+        list_push(queue, node->body);
+        break;
+      case AST_COMPOUND:
+        for (int i = 0; i < node->children->size; ++i) {
+          list_push(list, format(node->children->items[i]));
+          list_push(queue, node->children->items[i]);
+        }
+        break;
+      case AST_RETURN:
+        list_push(list, format(node->value));
+        list_push(queue, node->value);
+        break;
+      case AST_CALL:
+        break;
+      case AST_ASSIGNMENT:
+        list_push(list, format(node->value));
+        list_push(queue, node->value);
+        break;
+      default: error_exit("create_ast_file() - unknown node type\n");
     }
-    else {
-      list_push(list, format(node->left));
-      list_push(list, format(node->right));
-    }
-    list_push(queue, node->left);
-    list_push(queue, node->right);
+    list_push(list, "\n");
   }
-  char *path_ = "pyutil/AST_BFS_%d.txt";
-  char path[36] = {0};
-  snprintf(path, 36, path_, expr_n);
+
+  char *path = "pyutil/AST_data.txt";
   FILE *fp;
   if ((fp = fopen(path, "w")) == NULL) {
     printf("Error opening %s\n", path);
@@ -73,6 +110,8 @@ void create_ast_file(AST_t *expr, int expr_n)
 
   for (int i = 0; i < list->size; ++i)
     fwrite(list->items[i], sizeof(char), strlen(list->items[i]), fp);
-
   fclose(fp);
+
+  // use python script
+  system("cd pyutil/ && ./plot.py");
 }

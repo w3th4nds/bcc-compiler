@@ -34,18 +34,18 @@ void bcc_compile(char *src)
 {
   // inits
   init_debug();
-  if (PLOT_EXPR)   system("rm pyutil/AST_BFS_*");
+  if (GRAPH) system("rm pyutil/AST_data.txt");
   if (SHOW_SOURCE) printf("Source Code:\n%s\n", src);
   Lexer_t *lexer = init_lexer(src);
   ScopeManager_t *scope_manager = init_scope_manager();
   Parser_t *parser = init_parser(lexer, scope_manager);
   // parse AST
   AST_t *root = parser_parse(parser);
+  if (GRAPH) make_ast_graph(root);
   if (SCOPE_DEBUG) print_scopes(scope_manager);
   char *generated_assembly = asm_generate(scope_manager, root);
   if (ASM_DEBUG) printf("\nGenerated ASM =\n%s", generated_assembly);
   bcc_write_asm("out.s", generated_assembly);
-  if (PLOT_EXPR) system("cd pyutil/ && ./plot.py");
 }
 
 void bcc_compile_file(char *fname)

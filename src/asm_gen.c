@@ -289,7 +289,6 @@ BinopResult_t *binop_evaluate(AsmCtx_t *ctx, AST_t *node)
   if (ASM_DEBUG) printf("binop_evaluate()\n");
   assert(node != NULL && node->node_type == AST_BINOP);
   static int expr_n = 0;
-  if (PLOT_EXPR) create_ast_file(node, expr_n++);
   BinopResult_t *res = calloc(1, sizeof(BinopResult_t));
   res->computed = binop_iscomputable(node);
   if (res->computed) {
