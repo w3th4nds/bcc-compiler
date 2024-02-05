@@ -93,9 +93,9 @@ ret
 
 ```
 
-**Generated AST graph for the above source:**
+**Generated AST graph:**
 
-![](assets/example_AST_graph.png)
+![](assets/example_ast_graph.png)
 
 **Notes:**
 
