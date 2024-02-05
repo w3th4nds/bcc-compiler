@@ -12,18 +12,17 @@ AsmCtx_t *init_asm_ctx(ScopeManager_t *scope_manager, AST_t *node)
 char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
 {
   if (ASM_DEBUG) printf("asm_generate()\n");
+  assert(root != NULL && root->node_type == AST_COMPOUND);
   AsmCtx_t *ctx = init_asm_ctx(scope_manager, root);
-
-  // maybe this will be used eventually
-  List_t *asm_list = init_list(sizeof(char *));
 
   char *code = calloc(2, sizeof(char));
   // declare functions as global
   List_t *ids = hashmap_get_all_ids(scope_manager->scopes);
   for (int i = 0; i < ids->size; ++i) {
-    size_t newsz = strlen(code) + strlen("global \n") + strlen(ids->items[i]) + 1;
-    code = realloc(code, newsz);
-    snprintf(code+strlen(code), newsz, "global %s\n", (char *)ids->items[i]);
+    char *global_template = "global %s\n";
+    size_t global_template_sz = strlen(global_template) + strlen(ids->items[i]) + 1;
+    code = realloc(code, strlen(code) + global_template_sz);
+    snprintf(code+strlen(code), global_template_sz, global_template, (char *)ids->items[i]);
   }
 
   // .text section
@@ -53,6 +52,7 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
 char *asm_func_def(AsmCtx_t *ctx)
 {
   if (ASM_DEBUG) printf("asm_func_def()\n");
+  assert(ctx->node != NULL && ctx->node->node_type == AST_FUNCTION);
   // set the scope to make things easier
   scope_set(ctx->scope_manager, ctx->node->name);
   Scope_t *scope = hashmap_getscope(ctx->scope_manager->scopes, ctx->node->name);
@@ -84,9 +84,9 @@ char *asm_func_def(AsmCtx_t *ctx)
     strcat(func_code, next_code);
   }
 
-  // account for 128-byte stack red-zone (see notes)
+  // account for stack red-zone (see notes)
   // allocate stack space as necessary
-  if (scope->is_leaf) {
+  if (scope->is_leaf && scope->symtab->offset <= STACK_REDZONE_SIZE) {
     // pop rbp ret
     char *poprbpret = "pop rbp\nret\n\n";
     func_code = realloc(func_code, strlen(func_code) + strlen(poprbpret) + 1);
@@ -113,6 +113,7 @@ char *asm_func_def(AsmCtx_t *ctx)
 char *asm_return(AsmCtx_t *ctx)
 {
   if (ASM_DEBUG) printf("asm_return()\n");
+  assert(ctx->node != NULL && ctx->node->node_type == AST_RETURN);
   size_t sz;
   Scope_t *scope = scope_getcurrentscope(ctx->scope_manager);
   char *ret_reg = type_size(scope->specs_type) == 8 ? "rax" : "eax";
@@ -167,6 +168,7 @@ char *asm_return(AsmCtx_t *ctx)
 char *asm_assignment(AsmCtx_t *ctx)
 {
   if (ASM_DEBUG) printf("asm_assignment()\n");
+  assert(ctx->node != NULL && ctx->node->node_type == AST_ASSIGNMENT);
   char *id = ctx->node->decl == NULL ? ctx->node->name : ctx->node->decl->name;
   SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, id);
   char *code, template[64] = {0};
@@ -240,6 +242,7 @@ char *asm_assignment(AsmCtx_t *ctx)
 
 char *asm_call(AsmCtx_t *ctx, AST_t *node)
 {
+  assert(node != NULL && node->node_type == AST_CALL);
   if (ASM_DEBUG) printf("asm_call()\n");
   char *code = calloc(1, sizeof(char));
   char *template;
@@ -284,7 +287,7 @@ char *asm_call(AsmCtx_t *ctx, AST_t *node)
 BinopResult_t *binop_evaluate(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("binop_evaluate()\n");
-  assert(node->node_type == AST_BINOP && "binop_evaluate() - node is not a binop");
+  assert(node != NULL && node->node_type == AST_BINOP);
   static int expr_n = 0;
   if (PLOT_EXPR) create_ast_file(node, expr_n++);
   BinopResult_t *res = calloc(1, sizeof(BinopResult_t));
@@ -370,8 +373,8 @@ void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res)
       sz = strlen(template) + 16;
       next_code = calloc(sz, sizeof(char));
       // TODO: fix hardcode 8-byte size (?)
-      regA = get_used_register(ctx->reg_manager, 2, 8);
-      regB = get_used_register(ctx->reg_manager, 1, 8);
+      regA = get_used_register(ctx->reg_manager, 2, sizeof(long));
+      regB = get_used_register(ctx->reg_manager, 1, sizeof(long));
       snprintf(next_code, sz, template, regA, regB);
       free_register(ctx->reg_manager, regB);
       break;

@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define STACK_REDZONE_SIZE  128
+
 typedef struct {
   AST_t *node;
   ScopeManager_t *scope_manager;
