@@ -14,6 +14,7 @@ Scope_t *create_scope(char *scope_id)
   Scope_t *scope = calloc(1, sizeof(Scope_t));
   scope->scope_id = scope_id;
   scope->specs_type = NO_TYPE;
+  scope->is_leaf = true;
   scope->params = NULL;
   scope->symtab = init_symtab();
   return scope;

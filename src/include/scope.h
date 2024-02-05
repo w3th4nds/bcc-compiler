@@ -17,6 +17,7 @@ ScopeManager_t *init_scope_manager(void);
 void scope_set(ScopeManager_t *scope_manager, char *scope_id);
 void scope_add_to_symtab(ScopeManager_t *scope_manager, int type, char *name);
 void scope_add_specs(ScopeManager_t *scope_manager, int type, List_t *params);
+void scope_unset_leaf(ScopeManager_t *scope_manager);
 Scope_t *scope_getcurrentscope(ScopeManager_t *scope_manager);
 Scope_t *scope_getscopebyid(ScopeManager_t *scope_manager, char *scope_id);
 SymtabEntry_t *scope_getsymtabentry(ScopeManager_t *scope_manager, char *entry_id);

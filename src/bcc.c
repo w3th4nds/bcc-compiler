@@ -45,8 +45,7 @@ void bcc_compile(char *src)
   char *generated_assembly = asm_generate(scope_manager, root);
   if (ASM_DEBUG) printf("\nGenerated ASM =\n%s", generated_assembly);
   bcc_write_asm("out.s", generated_assembly);
-  printf("[ SUCCESS ]\n");
-  if (PLOT_EXPR) system("cd pyutil/ && ./plot.py && cd -");
+  if (PLOT_EXPR) system("cd pyutil/ && ./plot.py");
 }
 
 void bcc_compile_file(char *fname)

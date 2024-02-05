@@ -131,6 +131,10 @@ AST_t *parser_parse_call(Parser_t *parser)
   parser_eat(parser, TOKEN_ID);
   // args
   ast->children = parser_parse_list(parser);
+  // since the current function is making a call
+  // its no longer a leaf function
+  // (ignored by global scope)
+  scope_unset_leaf(parser->scope_manager);
   return ast;
 }
 

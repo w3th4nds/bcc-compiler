@@ -86,18 +86,25 @@ char *asm_func_def(AsmCtx_t *ctx)
 
   // account for 128-byte stack red-zone (see notes)
   // allocate stack space as necessary
-  // ********************************************
-  // TODO: figure out a way to tell if function is a leaf function
-  // if this applies, we need to add a "leave ret" as well
-  /*
-  if (strcmp(scope->scope_id, "main") == 0) {
+  if (scope->is_leaf) {
+    // pop rbp ret
+    char *poprbpret = "pop rbp\nret\n\n";
+    func_code = realloc(func_code, strlen(func_code) + strlen(poprbpret) + 1);
+    strcat(func_code, poprbpret);
+  }
+  else {
+    // sub rsp
     char *subrsp_template = "sub rsp, 0x%x\n";
     size_t subrsp_sz = strlen(subrsp_template) + 24;
     code = realloc(code, strlen(code) + subrsp_sz);
     snprintf(code+strlen(code), subrsp_sz, subrsp_template, scope->symtab->offset + scope->symtab->offset % 8);
+    // leave ret
+    char *leaveret = "leave\nret\n\n";
+    func_code = realloc(func_code, strlen(func_code) + strlen(leaveret) + 1);
+    strcat(func_code, leaveret);
   }
-  */
 
+  // put everything together
   code = realloc(code, strlen(code) + strlen(func_code) + 1);
   strcat(code, func_code);
   return code;
@@ -154,9 +161,6 @@ char *asm_return(AsmCtx_t *ctx)
     default:
       error_exit("asm_return - default case - implement\n");
   }
-  char *poprbpret = "pop rbp\nret\n\n";
-  code = realloc(code, strlen(code) + strlen(poprbpret) + 1);
-  strcat(code, poprbpret);
   return code;
 }
 
@@ -167,7 +171,8 @@ char *asm_assignment(AsmCtx_t *ctx)
   SymtabEntry_t *entry = scope_getsymtabentry(ctx->scope_manager, id);
   char *code, template[64] = {0};
   size_t sz;
-  // template for AST_NUM & AST_BINOP - AST_ID uses proxy_template
+  // template for AST_NUM, AST_BINOP, AST_CALL
+  // AST_ID uses proxy_template
   switch (entry->size) {
     case 1: strcpy(template, "mov byte [rbp-0x%x], ");  break;
     case 2: strcpy(template, "mov word [rbp-0x%x], ");  break;
@@ -218,6 +223,14 @@ char *asm_assignment(AsmCtx_t *ctx)
         snprintf(code+strlen(code), sz, template, entry->offset, result_reg);
         free_register(ctx->reg_manager, result_reg);
       }
+      break;
+    case AST_CALL:
+      Scope_t *call_scope = scope_getscopebyid(ctx->scope_manager, assigned_node->name);
+      code = asm_call(ctx, assigned_node);
+      strcat(template, type_size(call_scope->specs_type) == 8 ? "rax\n" : "eax\n");
+      sz = strlen(template) + 24;
+      code = realloc(code, strlen(code) + sz);
+      snprintf(code+strlen(code), sz, template, entry->offset);
       break;
     default:
       error_exit("asm_assignment() - default reached\n");
@@ -357,7 +370,6 @@ void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res)
       sz = strlen(template) + 16;
       next_code = calloc(sz, sizeof(char));
       // TODO: fix hardcode 8-byte size (?)
-      // is there a point to use the lower 4-byte of registers here ?
       regA = get_used_register(ctx->reg_manager, 2, 8);
       regB = get_used_register(ctx->reg_manager, 1, 8);
       snprintf(next_code, sz, template, regA, regB);

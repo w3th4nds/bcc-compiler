@@ -19,86 +19,88 @@ Will not compile itself. Unless things get out of hand.
 An example of what `bcc` can do as of now:
 
 ```
-$  DEBUG=SCOPE,ASM ./bcc tests/test11.c && ./build.sh 
-
-DEBUGGING:
-    LEX = 0
-  PARSE = 0
-  SCOPE = 1
-    ASM = 1
+$ PLOT_EXPR=1 ./bcc tests/test11.c && echo "\nGenerated assembly:" && cat out.s && ./build.sh
 
 Source Code:
-// should return 50
+long dummy(void)
+{
+  int a = 0x20;
+  return a - 0x10;
+}
+
+// should return 200
 int main(void)
 {
-  int y = 5 * 3 * ((4 + 3) * 10) - 1040;
-  long x = 0x10;
+  long x = dummy();
+  int y = 5 + x * ((4 + 3) * 10) - 1040;
   int a = x + y * 2;
   return a + 7 * 2;
 }
 
-Setting scope -> global
-Setting scope -> "main"
-Current_scope: main - adding: "y" TYPE_INT
-Current_scope: main - adding: "x" TYPE_LONG
-Current_scope: main - adding: "a" TYPE_INT
+[*] Creating graph for: AST_BFS_0.txt
+[*] Creating graph for: AST_BFS_1.txt
+[*] Creating graph for: AST_BFS_2.txt
+[*] Creating graph for: AST_BFS_3.txt
 
-Global scope:
-Symtab:
----
-
-main:
-Return type: TYPE_INT
-Params: (TYPE_VOID (null))
-Symtab:
-
-[ y               | TYPE_INT     | sz: 4 | off: 0x4  ]
-------------------------------------------------------
-[ x               | TYPE_LONG    | sz: 8 | off: 0x10 ]
-------------------------------------------------------
-[ a               | TYPE_INT     | sz: 4 | off: 0x14 ]
----
-asm_generate()
-asm_func_def()
-Setting scope -> "main"
-asm_assignment()
-binop_evaluate()
-asm_assignment()
-asm_assignment()
-binop_evaluate()
-asm_return()
-binop_evaluate()
-
-Generated ASM =
+Generated assembly:
+global dummy
 global main
 
 section .text
 
+dummy:
+push rbp
+mov rbp, rsp
+mov dword [rbp-0x4], 0x20
+mov ebx, dword [rbp-0x4]
+mov r8, 0x10
+sub rbx, r8
+mov rax, rbx
+pop rbp
+ret
+
 main:
 push rbp
 mov rbp, rsp
-mov dword [rbp-0x4], 0xa
-mov qword [rbp-0x10], 0x10
-mov rbx, qword [rbp-0x10]
-mov r8d, dword [rbp-0x4]
+sub rsp, 0x10
+call dummy
+mov qword [rbp-0x8], rax
+mov rbx, 0x5
+mov r8, qword [rbp-0x8]
+mov r9, 0x4
+mov r10, 0x3
+add r9, r10
+mov r10, 0xa
+imul r9, r10
+imul r8, r9
+mov r9, 0x410
+sub r8, r9
+add rbx, r8
+mov dword [rbp-0xc], ebx
+mov rbx, qword [rbp-0x8]
+mov r8d, dword [rbp-0xc]
 mov r9, 0x2
 imul r8, r9
 add rbx, r8
-mov dword [rbp-0x14], ebx
-mov ebx, dword [rbp-0x14]
+mov dword [rbp-0x10], ebx
+mov ebx, dword [rbp-0x10]
 mov r8, 0x7
 mov r9, 0x2
 imul r8, r9
 add rbx, r8
 mov eax, ebx
-pop rbp
+leave
 ret
 
-[ SUCCESS ]
 [*] Building asm into executable...
 [*] Running it and checking the return value
-50
+200
+
 ```
+
+**Expression AST graph for `y` variable assignment:**
+
+![](assets/example_AST_graph.png)
 
 **Notes:**
 
@@ -116,7 +118,12 @@ You can compile with -mno-red-zone to stop the compiler from using space below t
 
 TODO:
 
-********** implement leaf function detection in asm phase
+******* BUG - test12.c
+When a function call is part of an expression,
+if registers are already used by a first part of the expression
+before the call is made, the called function might use the same registers again,
+ruining the values they carry.
+
 ******* get puts working to print outside the range of [0, 255]
 **** clean up lexer - repeating code
 **** add unary operator support

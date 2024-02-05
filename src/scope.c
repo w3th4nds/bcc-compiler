@@ -68,6 +68,13 @@ void scope_add_specs(ScopeManager_t *scope_manager, int type, List_t *params)
     error_exit("scope_add_specs() - current scope does not exist in hashmap\n");
 }
 
+void scope_unset_leaf(ScopeManager_t *scope_manager)
+{
+  if (scope_manager->current_scope_id == NULL) return;
+  Scope_t *scope = hashmap_getscope(scope_manager->scopes, scope_manager->current_scope_id);
+  scope->is_leaf = false;
+}
+
 Scope_t *scope_getcurrentscope(ScopeManager_t *scope_manager)
 {
   assert(scope_manager->current_scope_id != NULL && "scope_getcurrentscope() - current_scope_id is NULL\n");
@@ -109,6 +116,7 @@ void print_scopes(ScopeManager_t *scope_manager)
         }
         printf(")\n");
       }
+      printf("is_leaf: %s\n", scope->is_leaf ? "true" : "false");
       printf("Symtab:\n");
       print_symtab(scope->symtab);
       scope = scope->next;

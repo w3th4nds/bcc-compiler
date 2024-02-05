@@ -13,7 +13,7 @@ char *format(AST_t *node)
       snprintf(buf, 50, "ID: %s\n", node->name);
       break;
     case AST_CALL:
-      snprintf(buf, 50, "CALL: %s\n", node->name);
+      snprintf(buf, 50, "CALL: %s()\n", node->name);
       break;
     case AST_BINOP:
       char op[2] = {0};
