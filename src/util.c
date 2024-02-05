@@ -39,7 +39,8 @@ char *format(AST_t *node)
       strcpy(buf+strlen(buf), "COMPOUND,");
       break;
     case AST_ASSIGNMENT:
-      strcpy(buf+strlen(buf), "ASSIGNMENT:,");
+      if (node->name == NULL) strcpy(buf+strlen(buf), "ASSIGNMENT:,");
+      else snprintf(buf+strlen(buf), sz, "ASSIGNMENT: %s,", node->name);
       break;
     default: error_exit("format() - default reached\n");
   }
@@ -52,6 +53,7 @@ void make_ast_graph(AST_t *root)
   assert(root != NULL && "create_ast_file - root is NULL");
   List_t *list = init_list(sizeof(char *));   // data to write to file
   List_t *queue = init_list(sizeof(AST_t *)); // queue to iterate on
+  List_t *annot = init_list(sizeof(char *)); // TODO: build annotations for arrows
   list_push(queue, root);
   while (queue->size) {
     AST_t *node = (AST_t *)list_getitem(queue, 0);
@@ -60,9 +62,10 @@ void make_ast_graph(AST_t *root)
     if (node == NULL) continue;
     switch (node->node_type) {
       // terminals
-      case AST_DECL:
       case AST_NUM:
       case AST_ID:
+      case AST_DECL:
+      case AST_CALL:
         break;
       case AST_BINOP:
         list_push(list, format(node->left));
@@ -90,9 +93,11 @@ void make_ast_graph(AST_t *root)
         list_push(list, format(node->value));
         list_push(queue, node->value);
         break;
-      case AST_CALL:
-        break;
       case AST_ASSIGNMENT:
+        if (node->decl != NULL) {
+          list_push(list, format(node->decl));
+          list_push(queue, node->decl);
+        }
         list_push(list, format(node->value));
         list_push(queue, node->value);
         break;

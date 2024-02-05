@@ -5,7 +5,6 @@ from dsplot.graph import Graph
 import webbrowser
 
 def create_program_graph(fname):
-  print(f'[*] Creating graph for: {fname}')
   with open(fname, 'r') as f:
     lines = [l.strip() for l in f.readlines()]
   # formatting
@@ -15,7 +14,7 @@ def create_program_graph(fname):
   tree = {line[0]:line[1:] for line in lines}
   graph = Graph(tree, directed=True)
   outname = f'{fname[:-4]}_graph.png'
-  graph.plot(output_path=outname, orientation='UD', border_color='#FFCE30', fill_color='#aec6cf')
+  graph.plot(output_path=outname, orientation='UD', fill_color='#BAC1D2')
   webbrowser.open(outname)
 
     

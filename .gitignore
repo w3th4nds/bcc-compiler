@@ -4,4 +4,4 @@ out
 out.o
 out.s
 bcc
-pyutil/AST_BFS_*
+pyutil/AST_*
