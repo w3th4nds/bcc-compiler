@@ -5,5 +5,6 @@
 #define KW_VOID   "void"
 #define KW_INT    "int"
 #define KW_LONG   "long"
+#define KW_WHILE  "while"
 
 #endif

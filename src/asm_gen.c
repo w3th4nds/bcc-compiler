@@ -283,7 +283,7 @@ char *asm_call(AsmCtx_t *ctx, AST_t *node)
   size_t sz;
   Scope_t *call_scope = scope_getscopebyid(ctx->scope_manager, node->name);
   // put args in registers
-  List_t *args = node->children;
+  List_t *args = node->args;
   for (int i = 0; i < args->size; ++i) {
     AST_t *arg = args->items[i];                  // arg   -> value passed to function
     AST_t *param = call_scope->params->items[i];  // param -> declared in funcdef

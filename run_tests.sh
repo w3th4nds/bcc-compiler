@@ -14,6 +14,7 @@ if [ ! -d "$testdir" ]; then
 fi
 
 for file in `ls $testdir/*.c | sort -V`; do
+  echo -n "[*] $file:"
   # compile & build, save return code
   SHOW_SOURCE=0 ./bcc $file
   nasm -g -F dwarf -f elf64 -o out.o out.s && gcc -o out out.o
@@ -23,15 +24,16 @@ for file in `ls $testdir/*.c | sort -V`; do
   gcc $file
   ./a.out
   gcc_ret_code=$?
-  echo -en "[*] $file:\t["
   if [ "$ret_code" -ne "$gcc_ret_code" ]; then
-    echo -en "$red FAIL "$white"] "
+    echo -en "\t[$red FAIL "$white"] "
     echo -en "($red bcc: $ret_code$white | "
     echo -e "$green gcc: $gcc_ret_code$white )"
-    #echo "Test source:"
-    #cat "$file"
+    if [ "${SOURCE:-0}" == 1 ]; then
+      echo "Test source:"
+      cat "$file"
+    fi
   else
-    echo -e "$green PASS "$white"]"
+    echo -e "\t[$green PASS "$white"]"
   fi
 
 done

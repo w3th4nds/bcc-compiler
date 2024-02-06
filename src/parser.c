@@ -130,7 +130,7 @@ AST_t *parser_parse_call(Parser_t *parser)
   ast->name = parser_get_value(parser);
   parser_eat(parser, TOKEN_ID);
   // args
-  ast->children = parser_parse_list(parser);
+  ast->args = parser_parse_list(parser);
   // since the current function is making a call
   // its no longer a leaf function
   // (ignored by global scope)
@@ -291,8 +291,8 @@ AST_t *parser_parse_function(Parser_t *parser)
   parser_eat(parser, TOKEN_ID);
   scope_set(parser->scope_manager, ast->name);
   // function params
-  ast->children = parser_parse_params(parser);
-  scope_add_specs(parser->scope_manager, ast->specs_type, ast->children);
+  ast->params = parser_parse_params(parser);
+  scope_add_specs(parser->scope_manager, ast->specs_type, ast->params);
   // function body
   ast->body = parser_parse_compound(parser);
   return ast;

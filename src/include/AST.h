@@ -20,11 +20,11 @@
   AST_FUNCTION:
     - specs_type
     - name
-    - children (=args - list of AST_DECLs)
+    - params
     - body
   AST_CALL:
     - name
-    - children (=args - list of AST_NUMs, AST_IDs, AST_CALLs)
+    - args
   AST_ASSIGNMENT:
     - decl (if it includes one)
     - name (if it does not include a decl)
@@ -38,6 +38,8 @@
     - right (can be another AST_BINOP)
   AST_COMPOUND:
     - children (list of statements)
+  AST_WHILE:
+    - 
 */
 
 // AST types
@@ -51,6 +53,7 @@ typedef enum {
   AST_RETURN,
   AST_BINOP,
   AST_COMPOUND,
+  AST_WHILE
 } AstType;
 
 typedef struct AST_STRUCT {
@@ -59,12 +62,19 @@ typedef struct AST_STRUCT {
   Type specs_type;
   long num_value;
   TokenKind op;
-  struct AST_STRUCT *value;
+  union {
+    struct AST_STRUCT *value;
+    struct AST_STRUCT *body;
+  };
   struct AST_STRUCT *left;
   struct AST_STRUCT *right;
   struct AST_STRUCT *decl;
-  struct AST_STRUCT *body;
-  List_t *children;
+  // different names for clarity
+  union {
+    List_t *children;
+    List_t *params;
+    List_t *args;
+  };
   // only used for creating graphs
   long node_id;
 } AST_t;

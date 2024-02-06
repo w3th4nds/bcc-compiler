@@ -75,10 +75,10 @@ void make_ast_graph(AST_t *root)
       case AST_DECL:
         break;
       case AST_CALL:
-        for (int i = 0; i < node->children->size; ++i) {
-          list_push(list, format(node->children->items[i]));
-          list_push(annot, format_annot(node, node->children->items[i], "arg"));
-          list_push(queue, node->children->items[i]);
+        for (int i = 0; i < node->args->size; ++i) {
+          list_push(list, format(node->args->items[i]));
+          list_push(annot, format_annot(node, node->args->items[i], "arg"));
+          list_push(queue, node->args->items[i]);
         }
         break;
       case AST_BINOP:

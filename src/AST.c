@@ -6,8 +6,9 @@ AST_t *init_ast(AstType node_type)
   AST_t *ast = calloc(1, sizeof(AST_t));
   ast->node_id = node_id++;
   ast->node_type = node_type;
-  if (node_type == AST_COMPOUND || node_type == AST_CALL)
-    ast->children = init_list(sizeof(AST_t *));
+  if (node_type == AST_COMPOUND) ast->children = init_list(sizeof(AST_t *));
+  else if (node_type == AST_CALL) ast->args = init_list(sizeof(AST_t *));
+  else if (node_type == AST_FUNCTION) ast->params = init_list(sizeof(AST_t *));
   return ast;
 }
 

@@ -56,6 +56,7 @@ const char *token_kind_to_str(TokenKind kind)
     case TOKEN_INT:           return "TOKEN_INT";
     case TOKEN_LONG:          return "TOKEN_LONG";
     case TOKEN_VOID:          return "TOKEN_VOID";
+    case TOKEN_WHILE:         return "TOKEN_WHILE";
     default:                  return "**IMPLEMENT**";
   }
 }
