@@ -99,7 +99,7 @@ ret
 
 **Generated AST graph:**
 
-![](assets/example_ast_graph.png)
+![](assets/example_AST_graph.png)
 
 **Notes:**
 
