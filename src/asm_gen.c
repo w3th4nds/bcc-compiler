@@ -1,5 +1,9 @@
 #include "include/asm_gen.h"
 
+// TODO: rewrite asm gen
+// too much spaghetti code
+// think architecture through
+
 AsmCtx_t *init_asm_ctx(ScopeManager_t *scope_manager, AST_t *node)
 {
   AsmCtx_t *ctx = calloc(1, sizeof(AsmCtx_t));
@@ -62,12 +66,6 @@ char *asm_func_def(AsmCtx_t *ctx)
   size_t sz = strlen(template) + 64;
   char *code = calloc(sz, sizeof(char));
   snprintf(code, sz, template, scope->scope_id);
-
-  // TODO: implement params
-  // search no only in the current scope's symtab,
-  // but in params too
-  // eventually even global scope
-  // ...
 
   char *func_code = calloc(1, sizeof(char));
   char *next_code;
