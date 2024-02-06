@@ -106,7 +106,6 @@ Scope_t *hashmap_getscope(Scope_t **hashmap, char *scope_id)
     if (strcmp(scope->scope_id, scope_id) == 0) return scope;
     scope = scope->next;
   }
-  error_exit("hashmap_getscope() - scope_id not found\n");
   return NULL;
 }
 

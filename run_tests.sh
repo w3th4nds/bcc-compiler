@@ -6,7 +6,7 @@ red="\e[31m"
 bold="\e[1m"
 echo -ne "$white$bold"
 
-testdir="tests/"
+testdir=tests
 
 # test if dir exists
 if [ ! -d "$testdir" ]; then
@@ -14,11 +14,6 @@ if [ ! -d "$testdir" ]; then
 fi
 
 for file in `ls $testdir/*.c | sort -V`; do
-  # check if file exists
-  if [ ! -f "$file" ]; then
-    echo -e "$red ** Missing $file **"
-    exit 1
-  fi
   # compile & build, save return code
   SHOW_SOURCE=0 ./bcc $file
   nasm -g -F dwarf -f elf64 -o out.o out.s && gcc -o out out.o
@@ -28,11 +23,13 @@ for file in `ls $testdir/*.c | sort -V`; do
   gcc $file
   ./a.out
   gcc_ret_code=$?
-  echo -en "Testing $file: ["
+  echo -en "[*] $file:\t["
   if [ "$ret_code" -ne "$gcc_ret_code" ]; then
-    echo -e "$red FAIL "$white"]"
-    echo "** bcc: $ret_code"
-    echo "** gcc: $gcc_ret_code"
+    echo -en "$red FAIL "$white"] "
+    echo -en "($red bcc: $ret_code$white | "
+    echo -e "$green gcc: $gcc_ret_code$white )"
+    #echo "Test source:"
+    #cat "$file"
   else
     echo -e "$green PASS "$white"]"
   fi

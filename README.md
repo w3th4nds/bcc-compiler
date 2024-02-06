@@ -19,38 +19,55 @@ Will not compile itself. Unless things get out of hand.
 An example of what `bcc` can do as of now:
 
 ```
-$ GRAPH=1 ./bcc tests/test11.c && echo "\nGenerated assembly:" && cat out.s && ./build.sh
+$ GRAPH=1 ./bcc tests/test13.c && echo "\nGenerated assembly:" && cat out.s && ./build.sh
 
 Source Code:
-long dummy(void)
+int add(int a, int b)
 {
-  int a = 0x20;
-  return a - 0x10;
+  return a + b;
 }
 
-// should return 200
-int main(void)
+int mul(int a, int b)
 {
-  long x = dummy();
-  int y = 5 + x * ((4 + 3) * 10) - 1040;
-  int a = x + y * 2;
-  return a + 7 * 2;
+  return a * b;
 }
+
+int main()
+{
+  int x = 2;
+  int y = 3;
+
+  int z = add(x, y);
+  int w = mul(z, 5);
+
+  return w * 4;
+}
+
 
 Generated assembly:
-global dummy
+global add
+global mul
 global main
 
 section .text
 
-dummy:
+add:
 push rbp
 mov rbp, rsp
-mov dword [rbp-0x4], 0x20
-mov ebx, dword [rbp-0x4]
-mov r8, 0x10
-sub rbx, r8
-mov rax, rbx
+mov ebx, edi
+mov r8d, esi
+add rbx, r8
+mov eax, ebx
+pop rbp
+ret
+
+mul:
+push rbp
+mov rbp, rsp
+mov ebx, edi
+mov r8d, esi
+imul rbx, r8
+mov eax, ebx
 pop rbp
 ret
 
@@ -58,39 +75,26 @@ main:
 push rbp
 mov rbp, rsp
 sub rsp, 0x10
-call dummy
-mov qword [rbp-0x8], rax
-mov rbx, 0x5
-mov r8, qword [rbp-0x8]
-mov r9, 0x4
-mov r10, 0x3
-add r9, r10
-mov r10, 0xa
-imul r9, r10
-imul r8, r9
-mov r9, 0x410
-sub r8, r9
-add rbx, r8
-mov dword [rbp-0xc], ebx
-mov rbx, qword [rbp-0x8]
-mov r8d, dword [rbp-0xc]
-mov r9, 0x2
-imul r8, r9
-add rbx, r8
-mov dword [rbp-0x10], ebx
+mov dword [rbp-0x4], 0x2
+mov dword [rbp-0x8], 0x3
+mov edi, dword [rbp-0x4]
+mov esi, dword [rbp-0x8]
+call add
+mov dword [rbp-0xc], eax
+mov edi, dword [rbp-0xc]
+mov esi, 0x5
+call mul
+mov dword [rbp-0x10], eax
 mov ebx, dword [rbp-0x10]
-mov r8, 0x7
-mov r9, 0x2
-imul r8, r9
-add rbx, r8
+mov r8, 0x4
+imul rbx, r8
 mov eax, ebx
 leave
 ret
 
 [*] Building asm into executable...
 [*] Running it and checking the return value
-200
-
+100
 ```
 
 **Generated AST graph:**

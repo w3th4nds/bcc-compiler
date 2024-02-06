@@ -75,6 +75,7 @@ char *asm_func_def(AsmCtx_t *ctx)
     switch (ctx->node->node_type) {
       case AST_RETURN:      next_code = asm_return(ctx);      break;
       case AST_ASSIGNMENT:  next_code = asm_assignment(ctx);  break;
+      case AST_CALL:        next_code = asm_call(ctx, ctx->node);
       case AST_DECL: break; // does nothing in asm phase
       default:
         printf("child node_type = %s\n", AST_type_to_str(ctx->node->node_type));
