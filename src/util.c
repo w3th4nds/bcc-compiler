@@ -61,7 +61,7 @@ void make_ast_graph(AST_t *root)
   assert(root != NULL && "create_ast_file - root is NULL");
   List_t *list = init_list(sizeof(char *));   // data to write to file
   List_t *queue = init_list(sizeof(AST_t *)); // queue to iterate on
-  List_t *annot = init_list(sizeof(char *));  // TODO: build annotations for arrows
+  List_t *annot = init_list(sizeof(char *));  // annotations for arrows
   list_push(queue, root);
   while (queue->size) {
     AST_t *node = (AST_t *)list_getitem(queue, 0);
@@ -73,7 +73,13 @@ void make_ast_graph(AST_t *root)
       case AST_NUM:
       case AST_ID:
       case AST_DECL:
+        break;
       case AST_CALL:
+        for (int i = 0; i < node->children->size; ++i) {
+          list_push(list, format(node->children->items[i]));
+          list_push(annot, format_annot(node, node->children->items[i], "arg"));
+          list_push(queue, node->children->items[i]);
+        }
         break;
       case AST_BINOP:
         list_push(list, format(node->left));

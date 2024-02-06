@@ -33,7 +33,6 @@ for file in `ls $testdir/*.c | sort -V`; do
     echo -e "$red FAIL "$white"]"
     echo "** bcc: $ret_code"
     echo "** gcc: $gcc_ret_code"
-    break
   else
     echo -e "$green PASS "$white"]"
   fi

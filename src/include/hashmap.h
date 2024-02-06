@@ -17,8 +17,6 @@ typedef struct Scope_s {
   char *scope_id;
   int specs_type;
   // used in assembly generation phase
-  // to determine if the 128-byte stack red zone
-  // should be used or not
   // a leaf function does not call any other function
   bool is_leaf;
   List_t *params;

@@ -89,12 +89,42 @@ Scope_t *scope_getscopebyid(ScopeManager_t *scope_manager, char *scope_id)
   return scope;
 }
 
-// search for an entry id in the current scope
-SymtabEntry_t *scope_getsymtabentry(ScopeManager_t *scope_manager, char *entry_id)
+Variable_t *scope_getvariable(ScopeManager_t *scope_manager, char *var_id)
 {
-  assert(entry_id != NULL && "scope_getsymtabentry() - entry_id is NULL\n");
-  SymtabEntry_t *entry = hashmap_getsymtabentry(scope_manager->scopes, scope_manager->current_scope_id, entry_id);
-  return entry;
+  assert(var_id != NULL && "scope_getvariable() - var_id is NULL\n");
+  Variable_t *var = calloc(1, sizeof(Variable_t));
+  // Search locally
+  SymtabEntry_t *entry = hashmap_getsymtabentry(scope_manager->scopes, scope_manager->current_scope_id, var_id);
+  if (entry != NULL) {
+    var->entry = entry;
+    var->offset = entry->offset;
+    var->size = entry->size;
+    var->scope = VAR_LOCAL;
+    return var;
+  }
+  // Search params
+  Scope_t *scope = scope_getcurrentscope(scope_manager);
+  for (int i = 0; i < scope->params->size; ++i) {
+    AST_t *param = scope->params->items[i];
+    if (param->name != NULL && strcmp(var_id, param->name) == 0) {
+      var->decl = param;
+      var->param_n = i;
+      var->size = type_size(param->specs_type);
+      var->scope = VAR_PARAM;
+      return var;
+    }
+  }
+  // Search global
+  entry = hashmap_getsymtabentry(scope_manager->scopes, NULL, var_id);
+  if (entry != NULL) {
+    var->entry = entry;
+    var->offset = entry->offset;
+    var->size = entry->size;
+    var->scope = VAR_GLOBAL;
+    return var;
+  }
+  error_exit("scope_getvariable() - var_id could not be found\n");
+  return NULL;
 }
 
 void print_scopes(ScopeManager_t *scope_manager)

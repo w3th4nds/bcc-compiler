@@ -25,7 +25,7 @@ SymtabEntry_t *symtab_getentry(Symtab_t *symtab, char *entry_id)
     SymtabEntry_t *entry = symtab->list->items[i];
     if (strcmp(entry->name, entry_id) == 0) return entry;
   }
-  error_exit("symtab_getentry() - could not find the entry id requested\n");
+  //error_exit("symtab_getentry() - could not find the entry id requested\n");
   return NULL;
 }
 
