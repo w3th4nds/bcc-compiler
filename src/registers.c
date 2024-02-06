@@ -42,7 +42,7 @@ void free_register(RegisterManager_t *reg_manager, char *reg)
   reg_manager->inuse[genreg_str_to_enum(reg)] = NOT_INUSE;
 }
 
-char *argreg_enum_to_str(GenReg reg, size_t size)
+char *argreg_enum_to_str(ArgReg reg, size_t size)
 {
   switch(reg) {
     case rdi: return size == 8 ? "rdi" : "edi";

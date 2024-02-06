@@ -99,7 +99,7 @@ char *asm_func_def(AsmCtx_t *ctx)
     char *subrsp_template = "sub rsp, 0x%x\n";
     size_t subrsp_sz = strlen(subrsp_template) + 24;
     code = realloc(code, strlen(code) + subrsp_sz);
-    snprintf(code+strlen(code), subrsp_sz, subrsp_template, scope->symtab->offset + scope->symtab->offset % 8);
+    snprintf(code+strlen(code), subrsp_sz, subrsp_template, scope->symtab->offset + scope->symtab->offset % 16);
     // leave ret
     char *leaveret = "leave\nret\n\n";
     func_code = realloc(func_code, strlen(func_code) + strlen(leaveret) + 1);
