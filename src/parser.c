@@ -44,7 +44,7 @@ char *parser_get_value(Parser_t *parser)
   return value;
 }
 
-Token_t *parser_eat(Parser_t *parser, int kind)
+Token_t *parser_eat(Parser_t *parser, TokenKind kind)
 {
   if (PARSE_DEBUG) printf("Eating: \"%s\" %s\n", parser->token->value, token_kind_to_str(parser->token->kind));
   if (parser->token->kind != kind) {
@@ -158,7 +158,7 @@ AST_t *parser_parse_comp_list(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_comp_list()\n");
   // TODO: add bracket support
-  int ispar = parser->token->kind == TOKEN_LP;
+  bool ispar = parser->token->kind == TOKEN_LP;
   parser_eat(parser, ispar ? TOKEN_LP : TOKEN_LBRACE);
 
   AST_t *ast = init_ast(AST_COMPOUND);

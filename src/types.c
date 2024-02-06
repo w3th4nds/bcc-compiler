@@ -1,6 +1,6 @@
 #include "include/types.h"
 
-int match_type(int token_kind)
+Type match_type(TokenKind token_kind)
 {
   switch (token_kind) {
     case TOKEN_VOID:  return TYPE_VOID;
@@ -10,31 +10,31 @@ int match_type(int token_kind)
   }
 }
 
-char *type_to_str(int type)
+char *type_to_str(Type type)
 {
   switch (type) {
-    case NO_TYPE:     return "NO_TYPE";
-    case TYPE_VOID:   return "TYPE_VOID";
-    case TYPE_INT:    return "TYPE_INT";
-    case TYPE_LONG:   return "TYPE_LONG";
-    default:          return "type_to_str() - implement";
+    case NO_TYPE:   return "NO_TYPE";
+    case TYPE_VOID: return "TYPE_VOID";
+    case TYPE_INT:  return "TYPE_INT";
+    case TYPE_LONG: return "TYPE_LONG";
+    default:        return "type_to_str() - implement";
   }
 }
 
-size_t type_size(int type)
+size_t type_size(Type type)
 {
   switch (type) {
-    case TYPE_VOID:   return sizeof(void);
-    case TYPE_INT:    return sizeof(int);
-    case TYPE_LONG:   return sizeof(long);
+    case TYPE_VOID: return sizeof(void);
+    case TYPE_INT:  return sizeof(int);
+    case TYPE_LONG: return sizeof(long);
     case NO_TYPE:
-    default:          error_exit("type_size - request for NO_TYPE / non implemented type\n");
+    default: error_exit("type_size - request for NO_TYPE / non implemented type\n");
   }
-  return 0;
+  return NO_TYPE;
 }
 
 // does not fully belong in types, but w/e
-bool is_assign_op(int token_kind)
+bool is_assign_op(TokenKind token_kind)
 {
   if (token_kind == TOKEN_EQUALS || \
       token_kind == TOKEN_PLUSEQUALS || \
@@ -46,7 +46,7 @@ bool is_assign_op(int token_kind)
   return false;
 }
 
-bool is_binop_op(int token_kind)
+bool is_binop_op(TokenKind token_kind)
 {
   if (token_kind == TOKEN_PLUS || \
       token_kind == TOKEN_MINUS || \

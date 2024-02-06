@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Token_t *init_token(char *value, int kind)
+Token_t *init_token(char *value, TokenKind kind)
 {
   Token_t *token = calloc(1, sizeof(Token_t));
   token->value = value;
@@ -10,9 +10,9 @@ Token_t *init_token(char *value, int kind)
   return token;
 }
 
-const char *token_kind_to_str(int value)
+const char *token_kind_to_str(TokenKind kind)
 {
-  switch (value) {
+  switch (kind) {
     case TOKEN_ID:            return "TOKEN_ID";
     case TOKEN_NUM:           return "TOKEN_NUM";
     case TOKEN_EQUALS:        return "TOKEN_EQUALS";

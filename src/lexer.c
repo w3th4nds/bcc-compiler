@@ -52,7 +52,7 @@ Token_t *lexer_advance_with(Lexer_t *lexer, Token_t *token)
 }
 
 // Used for single-character tokens
-Token_t *lexer_advance_current(Lexer_t *lexer, int kind)
+Token_t *lexer_advance_current(Lexer_t *lexer, TokenKind kind)
 {
   char *value = calloc(2, sizeof(char));
   value[0] = lexer->c;
@@ -63,8 +63,8 @@ Token_t *lexer_advance_current(Lexer_t *lexer, int kind)
 
 void lexer_skip_whitespace(Lexer_t *lexer)
 {
-  while (lexer->c == '\r' || lexer->c == '\n' || lexer->c == ' ' || lexer->c == '\t')
-    lexer_advance(lexer);
+  while (lexer->c == '\r' || lexer->c == '\n' || \
+         lexer->c == ' ' || lexer->c == '\t') lexer_advance(lexer);
 }
 void lexer_skip_line(Lexer_t *lexer)
 {
@@ -93,7 +93,7 @@ Token_t *lexer_parse_id(Lexer_t *lexer)
     strcat(value, (char[]){lookahead, 0});
     lookahead = lexer_peek(lexer, ++off);
   }
-  int token_kw;
+  TokenKind token_kw;
   if ((token_kw = is_keyword(value)) == -1)
     return init_token(value, TOKEN_ID);
   else
@@ -211,7 +211,7 @@ Token_t *lexer_next_token(Lexer_t *lexer)
   return init_token(0, TOKEN_EOF);
 }
 
-int is_keyword(char *value)
+TokenKind is_keyword(char *value)
 {
   // expand as necessary
   if (strcmp(value, KW_RETURN) == 0)  return TOKEN_RETURN;

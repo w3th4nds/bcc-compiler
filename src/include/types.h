@@ -7,17 +7,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-enum {
+typedef enum {
   NO_TYPE = -1,
   TYPE_VOID,
   TYPE_INT,
   TYPE_LONG,
-};
+} Type;
 
-int match_type(int token_kind);
-char *type_to_str(int type);
-size_t type_size(int type);
-bool is_assign_op(int token_kind);
-bool is_binop_op(int token_kind);
+Type match_type(TokenKind token_kind);
+char *type_to_str(Type type);
+size_t type_size(Type type);
+bool is_assign_op(TokenKind token_kind);
+bool is_binop_op(TokenKind token_kind);
 
 #endif

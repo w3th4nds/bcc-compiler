@@ -200,7 +200,6 @@ char *asm_assignment(AsmCtx_t *ctx)
       break;
     case VAR_PARAM:
       error_exit("asm_assignment() - VAR_PARAM implement(?)\n");
-      break;
     case VAR_GLOBAL:
       error_exit("implement");
   }

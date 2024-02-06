@@ -1,10 +1,11 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
+
 #include "keywords.h"
+#include "token.h"
 #include "types.h"
 #include "lexer.h"
 #include "AST.h"
-#include "token.h"
 #include "list.h"
 #include "scope.h"
 #include "debug.h"
@@ -20,7 +21,7 @@ typedef struct {
 } Parser_t;
 
 Parser_t *init_parser(Lexer_t *lexer, ScopeManager_t *scope_manager);
-Token_t *parser_eat(Parser_t *parser, int type);
+Token_t *parser_eat(Parser_t *parser, TokenKind type);
 Token_t *parser_peek(Parser_t *parser, int offset);
 char *parser_get_value(Parser_t *parser);
 AST_t *parser_parse(Parser_t *parser);

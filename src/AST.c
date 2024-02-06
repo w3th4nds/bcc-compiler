@@ -1,6 +1,6 @@
 #include "include/AST.h"
 
-AST_t *init_ast(int node_type)
+AST_t *init_ast(AstType node_type)
 {
   static long node_id = 0;
   AST_t *ast = calloc(1, sizeof(AST_t));
@@ -11,7 +11,7 @@ AST_t *init_ast(int node_type)
   return ast;
 }
 
-char *AST_type_to_str(int node_type)
+char *AST_type_to_str(AstType node_type)
 {
   switch (node_type) {
     case AST_NUM:             return "AST_NUM";
@@ -29,8 +29,8 @@ char *AST_type_to_str(int node_type)
   }
 }
 
-// TODO: implement
-// used for drawing graphs with python
+// TODO: implement (?)
+// probably delete since we have graphs now
 char *AST_to_str(AST_t *ast)
 {
   char *buf = calloc(200, sizeof(char));

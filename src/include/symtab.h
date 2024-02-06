@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 typedef struct {
-  int type;
+  Type type;
   size_t size;
   size_t offset;
   char *name;
@@ -19,7 +19,7 @@ typedef struct {
 } Symtab_t;
 
 Symtab_t *init_symtab(void);
-SymtabEntry_t *init_symtab_entry(int type, char *name, char *scope_id);
+SymtabEntry_t *init_symtab_entry(Type type, char *name, char *scope_id);
 SymtabEntry_t *symtab_getentry(Symtab_t *symtab, char *entry_id);
 void print_symtab(Symtab_t *symtab);
 

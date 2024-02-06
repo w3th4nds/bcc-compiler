@@ -2,6 +2,8 @@
 #define _AST_H_
 
 #include "list.h"
+#include "token.h"
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,24 +40,25 @@
     - children (list of statements)
 */
 
+// AST types
+typedef enum {
+  AST_NUM,
+  AST_ID,
+  AST_DECL,
+  AST_FUNCTION,
+  AST_CALL,
+  AST_ASSIGNMENT,
+  AST_RETURN,
+  AST_BINOP,
+  AST_COMPOUND,
+} AstType;
+
 typedef struct AST_STRUCT {
-  // AST node type
-  enum {
-    AST_NUM,
-    AST_ID,
-    AST_DECL,
-    AST_FUNCTION,
-    AST_CALL,
-    AST_ASSIGNMENT,
-    AST_RETURN,
-    AST_BINOP,
-    AST_COMPOUND,
-  } node_type;
-  //--
+  AstType node_type;
   char *name;
-  int specs_type;
+  Type specs_type;
   long num_value;
-  int op;
+  TokenKind op;
   struct AST_STRUCT *value;
   struct AST_STRUCT *left;
   struct AST_STRUCT *right;
@@ -66,8 +69,8 @@ typedef struct AST_STRUCT {
   long node_id;
 } AST_t;
 
-AST_t *init_ast(int node_type);
-char *AST_type_to_str(int node_type);
+AST_t *init_ast(AstType node_type);
+char *AST_type_to_str(AstType node_type);
 char *AST_to_str(AST_t *ast);
 
 #endif
