@@ -1,6 +1,6 @@
 #include "include/symtab.h"
 
-SymtabEntry_t *init_symtab_entry(Type type, char *name, char *scope_id)
+SymtabEntry_t *init_symtab_entry(Type_t type, char *name, char *scope_id)
 {
   SymtabEntry_t *symtab_entry = calloc(1, sizeof(SymtabEntry_t));
   symtab_entry->type = type;

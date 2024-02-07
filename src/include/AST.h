@@ -60,14 +60,14 @@ typedef enum {
   AST_COMPOUND,
   AST_COND,
   AST_WHILE,
-} AstType;
+} AstType_t;
 
 typedef struct AST_STRUCT {
-  AstType node_type;
+  AstType_t node_type;
   char *name;
-  Type specs_type;
+  Type_t specs_type;
   long num_value;
-  TokenKind op;
+  TokenKind_t op;
   union {
     struct AST_STRUCT *value;
     struct AST_STRUCT *body;
@@ -86,8 +86,8 @@ typedef struct AST_STRUCT {
   long node_id;
 } AST_t;
 
-AST_t *init_ast(AstType node_type);
-char *AST_type_to_str(AstType node_type);
+AST_t *init_ast(AstType_t node_type);
+char *AST_type_to_str(AstType_t node_type);
 char *AST_to_str(AST_t *ast);
 
 #endif

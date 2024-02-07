@@ -47,7 +47,7 @@ void scope_set(ScopeManager_t *scope_manager, char *scope_id)
 }
 
 // add symbol to CURRENT symbol table
-void scope_add_to_symtab(ScopeManager_t *scope_manager, Type type, char *name)
+void scope_add_to_symtab(ScopeManager_t *scope_manager, Type_t type, char *name)
 {
   if (SCOPE_DEBUG) {
     if (scope_manager->current_scope_id == NULL) printf("Current scope: global");
@@ -60,7 +60,7 @@ void scope_add_to_symtab(ScopeManager_t *scope_manager, Type type, char *name)
 
 // specify function return type
 // and the parameters of the current function
-void scope_add_specs(ScopeManager_t *scope_manager, Type type, List_t *params)
+void scope_add_specs(ScopeManager_t *scope_manager, Type_t type, List_t *params)
 {
   if (hashmap_key_exists(scope_manager->scopes, scope_manager->current_scope_id))
     hashmap_add_specs(scope_manager->scopes, scope_manager->current_scope_id, type, params);

@@ -46,7 +46,7 @@ void hashmap_add(Scope_t **hashmap, char *scope_id, SymtabEntry_t *symtab_entry)
   list_push(scope->symtab->list, symtab_entry);
 }
 
-void hashmap_add_specs(Scope_t **hashmap, char *scope_id, Type type, List_t *params)
+void hashmap_add_specs(Scope_t **hashmap, char *scope_id, Type_t type, List_t *params)
 {
   int key = gethash(scope_id);
   Scope_t *scope = hashmap[key];

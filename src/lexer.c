@@ -48,7 +48,7 @@ Token_t *lexer_advance_with(Lexer_t *lexer, Token_t *token)
 }
 
 // Used for single-character tokens
-Token_t *lexer_advance_current(Lexer_t *lexer, TokenKind kind)
+Token_t *lexer_advance_current(Lexer_t *lexer, TokenKind_t kind)
 {
   char *value = calloc(2, sizeof(char));
   value[0] = lexer->c;
@@ -89,7 +89,7 @@ Token_t *lexer_parse_id(Lexer_t *lexer)
     strcat(value, (char[]){lookahead, 0});
     lookahead = lexer_peek(lexer, ++off);
   }
-  TokenKind token_kw;
+  TokenKind_t token_kw;
   if ((token_kw = is_keyword(value)) == -1)
     return init_token(value, TOKEN_ID);
   else

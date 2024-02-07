@@ -44,7 +44,7 @@ char *parser_get_value(Parser_t *parser)
   return value;
 }
 
-Token_t *parser_eat(Parser_t *parser, TokenKind kind)
+Token_t *parser_eat(Parser_t *parser, TokenKind_t kind)
 {
   if (PARSE_DEBUG) printf("Eating: \"%s\" %s\n", parser->token->value, token_kind_to_str(parser->token->kind));
   if (parser->token->kind != kind) {

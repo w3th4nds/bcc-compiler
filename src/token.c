@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-Token_t *init_token(char *value, TokenKind kind)
+Token_t *init_token(char *value, TokenKind_t kind)
 {
   Token_t *token = calloc(1, sizeof(Token_t));
   token->value = value;
@@ -10,7 +10,7 @@ Token_t *init_token(char *value, TokenKind kind)
   return token;
 }
 
-const char *token_kind_to_str(TokenKind kind)
+const char *token_kind_to_str(TokenKind_t kind)
 {
   switch (kind) {
     case TOKEN_ID:            return "TOKEN_ID";
@@ -66,7 +66,7 @@ void print_token(Token_t *token)
   printf("<Token=`%s`, Kind=`%s`>\n", token->value, token_kind_to_str(token->kind));
 }
 
-bool is_assign_op(TokenKind token_kind)
+bool is_assign_op(TokenKind_t token_kind)
 {
   if (token_kind == TOKEN_EQUALS || \
       token_kind == TOKEN_PLUSEQUALS || \
@@ -78,7 +78,7 @@ bool is_assign_op(TokenKind token_kind)
   return false;
 }
 
-bool is_binop_op(TokenKind token_kind)
+bool is_binop_op(TokenKind_t token_kind)
 {
   if (token_kind == TOKEN_PLUS || \
       token_kind == TOKEN_MINUS || \
@@ -87,7 +87,7 @@ bool is_binop_op(TokenKind token_kind)
   return false;
 }
 
-bool is_cond_op(TokenKind token_kind)
+bool is_cond_op(TokenKind_t token_kind)
 {
   if (token_kind == TOKEN_GT || \
       token_kind == TOKEN_GE || \
@@ -97,7 +97,7 @@ bool is_cond_op(TokenKind token_kind)
   return false;
 }
 
-char *op_to_str(TokenKind op)
+char *op_to_str(TokenKind_t op)
 {
   switch (op) {
     case TOKEN_EQUALS:        return "=";

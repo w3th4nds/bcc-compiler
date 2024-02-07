@@ -12,10 +12,10 @@ typedef enum {
   TYPE_VOID,
   TYPE_INT,
   TYPE_LONG,
-} Type;
+} Type_t;
 
-Type match_type(TokenKind token_kind);
-char *type_to_str(Type type);
-size_t type_size(Type type);
+Type_t match_type(TokenKind_t token_kind);
+char *type_to_str(Type_t type);
+size_t type_size(Type_t type);
 
 #endif

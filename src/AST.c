@@ -1,6 +1,6 @@
 #include "include/AST.h"
 
-AST_t *init_ast(AstType node_type)
+AST_t *init_ast(AstType_t node_type)
 {
   static long node_id = 0;
   AST_t *ast = calloc(1, sizeof(AST_t));
@@ -12,7 +12,7 @@ AST_t *init_ast(AstType node_type)
   return ast;
 }
 
-char *AST_type_to_str(AstType node_type)
+char *AST_type_to_str(AstType_t node_type)
 {
   switch (node_type) {
     case AST_NUM:         return "AST_NUM";

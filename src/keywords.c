@@ -1,6 +1,6 @@
 #include "include/keywords.h"
 
-TokenKind is_keyword(char *value)
+TokenKind_t is_keyword(char *value)
 {
   // expand as necessary
   if (strcmp(value, KW_RETURN) == 0)  return TOKEN_RETURN;

@@ -1,6 +1,6 @@
 #include "include/types.h"
 
-Type match_type(TokenKind token_kind)
+Type_t match_type(TokenKind_t token_kind)
 {
   switch (token_kind) {
     case TOKEN_VOID:  return TYPE_VOID;
@@ -10,7 +10,7 @@ Type match_type(TokenKind token_kind)
   }
 }
 
-char *type_to_str(Type type)
+char *type_to_str(Type_t type)
 {
   switch (type) {
     case NO_TYPE:   return "NO_TYPE";
@@ -22,7 +22,7 @@ char *type_to_str(Type type)
   return NULL;
 }
 
-size_t type_size(Type type)
+size_t type_size(Type_t type)
 {
   switch (type) {
     case TYPE_VOID: return sizeof(void);

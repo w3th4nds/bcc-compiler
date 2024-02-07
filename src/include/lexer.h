@@ -28,8 +28,8 @@ Token_t *lexer_parse_num(Lexer_t *lexer);
 Token_t *lexer_parse_hex(Lexer_t *lexer);
 Token_t *lexer_next_token(Lexer_t *lexer);
 Token_t *lexer_advance_with(Lexer_t *lexer, Token_t *token);
-Token_t *lexer_advance_current(Lexer_t *lexer, TokenKind kind);
-TokenKind is_keyword(char *value);
+Token_t *lexer_advance_current(Lexer_t *lexer, TokenKind_t kind);
+TokenKind_t is_keyword(char *value);
 void lexer_test(Lexer_t *lexer);
 
 #endif

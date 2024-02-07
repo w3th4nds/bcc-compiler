@@ -50,19 +50,19 @@ typedef enum {
   TOKEN_VOID,
   TOKEN_WHILE,
   TOKEN_EOF
-} TokenKind;
+} TokenKind_t;
 
 typedef struct {
   char *value;
-  TokenKind kind;
+  TokenKind_t kind;
 } Token_t;
 
-Token_t *init_token(char *value, TokenKind kind);
-const char *token_kind_to_str(TokenKind kind);
+Token_t *init_token(char *value, TokenKind_t kind);
+const char *token_kind_to_str(TokenKind_t kind);
 void print_token(Token_t *token);
-bool is_assign_op(TokenKind token_kind);
-bool is_binop_op(TokenKind token_kind);
-bool is_cond_op(TokenKind token_kind);
-char *op_to_str(TokenKind op);
+bool is_assign_op(TokenKind_t token_kind);
+bool is_binop_op(TokenKind_t token_kind);
+bool is_cond_op(TokenKind_t token_kind);
+char *op_to_str(TokenKind_t op);
 
 #endif

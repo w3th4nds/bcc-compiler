@@ -33,8 +33,8 @@ typedef struct {
 
 ScopeManager_t *init_scope_manager(void);
 void scope_set(ScopeManager_t *scope_manager, char *scope_id);
-void scope_add_to_symtab(ScopeManager_t *scope_manager, Type type, char *name);
-void scope_add_specs(ScopeManager_t *scope_manager, Type type, List_t *params);
+void scope_add_to_symtab(ScopeManager_t *scope_manager, Type_t type, char *name);
+void scope_add_specs(ScopeManager_t *scope_manager, Type_t type, List_t *params);
 void scope_unset_leaf(ScopeManager_t *scope_manager);
 Scope_t *scope_getcurrentscope(ScopeManager_t *scope_manager);
 Scope_t *scope_getscopebyid(ScopeManager_t *scope_manager, char *scope_id);
