@@ -6,40 +6,18 @@ char *format(AST_t *node)
   char *buf = calloc(sz, sizeof(char));
   snprintf(buf, sz, "[%ld] ", node->node_id);
   switch (node->node_type) {
-    case AST_NUM:
-      snprintf(buf+strlen(buf), sz, "NUM: %ld,", node->num_value);
-      break;
-    case AST_ID:
-      snprintf(buf+strlen(buf), sz, "ID: %s,", node->name);
-      break;
-    case AST_CALL:
-      snprintf(buf+strlen(buf), sz, "CALL: %s(),", node->name);
-      break;
-    case AST_BINOP:
-      char op[2] = {0};
-      switch (node->op) {
-        case TOKEN_PLUS:  strcpy(op, "+"); break;
-        case TOKEN_MINUS: strcpy(op, "-"); break;
-        case TOKEN_MUL:   strcpy(op, "*"); break;
-        case TOKEN_DIV:   strcpy(op, "/"); break;
-        default: error_exit("format() - unknown op\n");
-      }
-      snprintf(buf+strlen(buf), sz, "BINOP: %s,", op);
-      break;
-    case AST_FUNCTION:
-      snprintf(buf+strlen(buf), sz, "FUNCTION: %s %s,", type_to_str(node->specs_type), node->name);
-      break;
-    case AST_RETURN:
-      strcpy(buf+strlen(buf), "RETURN,");
-      break;
-    case AST_DECL:
-      snprintf(buf+strlen(buf), sz, "DECL: %s %s,", type_to_str(node->specs_type), node->name);
-      break;
-    case AST_COMPOUND:
-      strcpy(buf+strlen(buf), "COMPOUND,");
-      break;
-    case AST_ASSIGNMENT:
-      if (node->name == NULL) strcpy(buf+strlen(buf), "ASSIGNMENT:,");
+    case AST_NUM: snprintf(buf+strlen(buf), sz, "NUM: %ld,", node->num_value); break;
+    case AST_ID: snprintf(buf+strlen(buf), sz, "ID: %s,", node->name); break;
+    case AST_CALL: snprintf(buf+strlen(buf), sz, "CALL: %s(),", node->name); break;
+    case AST_COND: snprintf(buf+strlen(buf), sz, "COND: %s,", op_to_str(node->op)); break;
+    case AST_BINOP: snprintf(buf+strlen(buf), sz, "BINOP: %s,", op_to_str(node->op)); break;
+    case AST_FUNCTION: snprintf(buf+strlen(buf), sz, "FUNCTION: %s %s,", type_to_str(node->specs_type), node->name); break;
+    case AST_RETURN: strcat(buf, "RETURN,"); break;
+    case AST_DECL: snprintf(buf+strlen(buf), sz, "DECL: %s %s,", type_to_str(node->specs_type), node->name); break;
+    case AST_COMPOUND: strcat(buf, "COMPOUND,"); break;
+    case AST_WHILE: strcat(buf, "WHILE:,"); break;
+    case AST_ASSIGNMENT: 
+      if (node->name == NULL) strcat(buf, "ASSIGNMENT:,");
       else snprintf(buf+strlen(buf), sz, "ASSIGNMENT: %s,", node->name);
       break;
     default: error_exit("format() - default reached\n");
@@ -81,6 +59,7 @@ void make_ast_graph(AST_t *root)
           list_push(queue, node->args->items[i]);
         }
         break;
+      case AST_COND:
       case AST_BINOP:
         list_push(list, format(node->left));
         list_push(annot, format_annot(node, node->left, "left"));
@@ -91,10 +70,10 @@ void make_ast_graph(AST_t *root)
         break;
       case AST_FUNCTION:
         // params
-        for (int i = 0; i < node->children->size; ++i) {
-          list_push(list, format(node->children->items[i]));
-          list_push(annot, format_annot(node, node->children->items[i], "param"));
-          list_push(queue, node->children->items[i]);
+        for (int i = 0; i < node->params->size; ++i) {
+          list_push(list, format(node->params->items[i]));
+          list_push(annot, format_annot(node, node->params->items[i], "param"));
+          list_push(queue, node->params->items[i]);
         }
         // body
         list_push(list, format(node->body));
@@ -122,6 +101,14 @@ void make_ast_graph(AST_t *root)
         list_push(list, format(node->value));
         list_push(annot, format_annot(node, node->value, "value"));
         list_push(queue, node->value);
+        break;
+      case AST_WHILE:
+        list_push(list, format(node->cond));
+        list_push(annot, format_annot(node, node->cond, "cond"));
+        list_push(queue, node->cond);
+        list_push(list, format(node->body));
+        list_push(annot, format_annot(node, node->body, "body"));
+        list_push(queue, node->body);
         break;
       default: error_exit("create_ast_file() - unknown node type\n");
     }

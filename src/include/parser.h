@@ -27,9 +27,11 @@ char *parser_get_value(Parser_t *parser);
 AST_t *parser_parse(Parser_t *parser);
 AST_t *parser_parse_id(Parser_t *parser);
 AST_t *parser_parse_call(Parser_t *parser);
+AST_t *parser_parse_while(Parser_t *parser);
 List_t *parser_parse_list(Parser_t *parser);
 AST_t *parser_parse_comp_list(Parser_t *parser);
 AST_t *parser_parse_expr(Parser_t *parser);
+AST_t *parser_parse_condition(Parser_t *parser);
 AST_t *parser_parse_term(Parser_t *parser);
 AST_t *parser_parse_assignment(Parser_t *parser);
 AST_t *parser_parse_factor(Parser_t *parser);
@@ -43,5 +45,6 @@ bool is_function_def(Parser_t *parser);
 bool is_function_call(Parser_t *parser);
 bool is_assignment(Parser_t *parser);
 bool is_decl(Parser_t *parser);
+bool is_while(Parser_t *parser);
 
 #endif

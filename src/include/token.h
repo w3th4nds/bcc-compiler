@@ -1,6 +1,9 @@
 #ifndef _TOKEN_H_
 #define _TOKEN_H_
 
+#include "debug.h"
+#include <stdbool.h>
+
 typedef enum {
   TOKEN_ID = 0,
   TOKEN_NUM,
@@ -57,5 +60,9 @@ typedef struct {
 Token_t *init_token(char *value, TokenKind kind);
 const char *token_kind_to_str(TokenKind kind);
 void print_token(Token_t *token);
+bool is_assign_op(TokenKind token_kind);
+bool is_binop_op(TokenKind token_kind);
+bool is_cond_op(TokenKind token_kind);
+char *op_to_str(TokenKind op);
 
 #endif

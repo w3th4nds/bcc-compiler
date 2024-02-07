@@ -38,8 +38,13 @@
     - right (can be another AST_BINOP)
   AST_COMPOUND:
     - children (list of statements)
+  AST_COND: - same as binop but w/ different type name
+    - left
+    - op
+    - right
   AST_WHILE:
-    - 
+    - cond
+    - body
 */
 
 // AST types
@@ -53,7 +58,8 @@ typedef enum {
   AST_RETURN,
   AST_BINOP,
   AST_COMPOUND,
-  AST_WHILE
+  AST_COND,
+  AST_WHILE,
 } AstType;
 
 typedef struct AST_STRUCT {
@@ -69,6 +75,7 @@ typedef struct AST_STRUCT {
   struct AST_STRUCT *left;
   struct AST_STRUCT *right;
   struct AST_STRUCT *decl;
+  struct AST_STRUCT *cond;
   // different names for clarity
   union {
     List_t *children;

@@ -101,6 +101,7 @@ AST_t *parser_parse_statement(Parser_t *parser)
   if (is_function_call(parser)) return parser_parse_call(parser);
   if (is_assignment(parser))    return parser_parse_assignment(parser);
   if (is_decl(parser))          return parser_parse_decl(parser, true);
+  if (is_while(parser))         return parser_parse_while(parser);
   error_exit("parser_parse_statement() - implement\n");
   return NULL;
 }
@@ -135,6 +136,18 @@ AST_t *parser_parse_call(Parser_t *parser)
   // its no longer a leaf function
   // (ignored by global scope)
   scope_unset_leaf(parser->scope_manager);
+  return ast;
+}
+
+AST_t *parser_parse_while(Parser_t *parser)
+{
+  if (PARSE_DEBUG) printf("parser_parse_while()\n");
+  parser_eat(parser, TOKEN_WHILE);
+  parser_eat(parser, TOKEN_LP);
+  AST_t *ast = init_ast(AST_WHILE);
+  ast->cond = parser_parse_condition(parser);
+  parser_eat(parser, TOKEN_RP);
+  ast->body = parser_parse_compound(parser);
   return ast;
 }
 
@@ -221,6 +234,24 @@ AST_t *parser_parse_expr(Parser_t *parser)
     ast->op = parser->token->kind;
     parser_eat(parser, parser->token->kind);
     ast->right = parser_parse_expr(parser);
+  }
+  return ast;
+}
+
+// just parser_parser_expr wrapper
+// with conditionals support
+// TODO: add "||" "&&" support -> they need a higher lvl function
+AST_t *parser_parse_condition(Parser_t *parser)
+{
+  if (PARSE_DEBUG) printf("parser_parse_condition()\n");
+  AST_t *ast = parser_parse_expr(parser);
+  while (is_cond_op(parser->token->kind)) {
+    AST_t *tmp_ast = ast;
+    ast = init_ast(AST_COND);
+    ast->left = tmp_ast;
+    ast->op = parser->token->kind;
+    parser_eat(parser, parser->token->kind);
+    ast->right = parser_parse_condition(parser);
   }
   return ast;
 }
@@ -392,5 +423,14 @@ bool is_decl(Parser_t *parser)
       parser_peek(parser, 1)->kind == TOKEN_ID && \
       (parser_peek(parser, 2)->kind == TOKEN_SEMI || 
        is_assign_op(parser_peek(parser, 2)->kind))) return true;
+  return false;
+}
+
+// TODO: cleanup
+bool is_while(Parser_t *parser)
+{
+  if (PARSE_DEBUG) printf("is_while()\n");
+  if (parser_peek(parser, 0)->kind == TOKEN_WHILE && \
+      parser_peek(parser, 1)->kind == TOKEN_LP) return true;
   return false;
 }

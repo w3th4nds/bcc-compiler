@@ -17,7 +17,5 @@ typedef enum {
 Type match_type(TokenKind token_kind);
 char *type_to_str(Type type);
 size_t type_size(Type type);
-bool is_assign_op(TokenKind token_kind);
-bool is_binop_op(TokenKind token_kind);
 
 #endif

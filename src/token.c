@@ -65,3 +65,54 @@ void print_token(Token_t *token)
 {
   printf("<Token=`%s`, Kind=`%s`>\n", token->value, token_kind_to_str(token->kind));
 }
+
+bool is_assign_op(TokenKind token_kind)
+{
+  if (token_kind == TOKEN_EQUALS || \
+      token_kind == TOKEN_PLUSEQUALS || \
+      token_kind == TOKEN_MINUSEQUALS || \
+      token_kind == TOKEN_DIVEQUALS || \
+      token_kind == TOKEN_MULEQUALS || \
+      token_kind == TOKEN_XOREQUALS || \
+      token_kind == TOKEN_MODEQUALS) return true;
+  return false;
+}
+
+bool is_binop_op(TokenKind token_kind)
+{
+  if (token_kind == TOKEN_PLUS || \
+      token_kind == TOKEN_MINUS || \
+      token_kind == TOKEN_MUL || \
+      token_kind == TOKEN_DIV) return true;
+  return false;
+}
+
+bool is_cond_op(TokenKind token_kind)
+{
+  if (token_kind == TOKEN_GT || \
+      token_kind == TOKEN_GE || \
+      token_kind == TOKEN_LT || \
+      token_kind == TOKEN_LE || \
+      token_kind == TOKEN_EQUALSEQUALS) return true;
+  return false;
+}
+
+char *op_to_str(TokenKind op)
+{
+  switch (op) {
+    case TOKEN_EQUALS:        return "=";
+    case TOKEN_EQUALSEQUALS:  return "==";
+    case TOKEN_PLUS:          return "+";
+    case TOKEN_MINUS:         return "-";
+    case TOKEN_MUL:           return "*";
+    case TOKEN_DIV:           return "/";
+    case TOKEN_GT:            return ">";
+    case TOKEN_GE:            return ">=";
+    case TOKEN_LT:            return "<";
+    case TOKEN_LE:            return "<=";
+    default:
+      printf("op = %d\n", op);
+      error_exit("op_to_str() - unknown op\n");
+  }
+  return NULL;
+}

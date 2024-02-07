@@ -12,11 +12,7 @@ Lexer_t *init_lexer(char *src)
   lexer->rollback_idx = 0;
   lexer->src_size = strlen(src);
   lexer->c = src[lexer->idx];
-  if (LEX_DEBUG) {
-    // get all generated tokens - no parsing
-    lexer_test(lexer);
-    exit(0);
-  }
+  if (LEX_DEBUG) lexer_test(lexer);
   return lexer;
 }
 
@@ -150,7 +146,6 @@ Token_t *lexer_next_token(Lexer_t *lexer)
   while (lexer->c != '\0') {
     lexer_skip_whitespace(lexer);
     if (isalpha(lexer->c) || lexer->c == '_') return lexer_advance_with(lexer, lexer_parse_id(lexer));
-    // special case for hex numbers 
     if (lexer->c == '0' && lexer_peek(lexer, 1) == 'x') return lexer_advance_with(lexer, lexer_parse_hex(lexer));
     if (isdigit(lexer->c)) return lexer_advance_with(lexer, lexer_parse_num(lexer));
     char lookahead = lexer_peek(lexer, 1);
@@ -211,19 +206,10 @@ Token_t *lexer_next_token(Lexer_t *lexer)
   return init_token(0, TOKEN_EOF);
 }
 
-TokenKind is_keyword(char *value)
-{
-  // expand as necessary
-  if (strcmp(value, KW_RETURN) == 0)  return TOKEN_RETURN;
-  if (strcmp(value, KW_INT) == 0)     return TOKEN_INT;
-  if (strcmp(value, KW_LONG) == 0)    return TOKEN_LONG;
-  if (strcmp(value, KW_VOID) == 0)    return TOKEN_VOID;
-  else return -1;
-}
-
 void lexer_test(Lexer_t *lexer)
 {
   Token_t *token = NULL;
   while ((token = lexer_next_token(lexer))->kind != TOKEN_EOF)
     print_token(token);
+  exit(0); // if lexing is wrong, no point debugging further
 }

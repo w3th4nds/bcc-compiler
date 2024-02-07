@@ -27,6 +27,7 @@ typedef struct {
 } BinopResult_t;
 
 char *asm_generate(ScopeManager_t *scope_manager, AST_t *root);
+char *asm_access(Variable_t *var);
 char *asm_func_def(AsmCtx_t *ctx);
 char *asm_return(AsmCtx_t *ctx);
 char *asm_assignment(AsmCtx_t *ctx);

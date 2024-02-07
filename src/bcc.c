@@ -1,11 +1,4 @@
 #include "include/bcc.h"
-#include "include/lexer.h"
-#include "include/scope.h"
-#include "include/parser.h"
-#include "include/util.h"
-#include "include/debug.h"
-#include "include/asm_gen.h"
-#include <stdlib.h>
 
 char *bcc_read_file(char *fname)
 {
