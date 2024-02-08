@@ -17,18 +17,9 @@ void list_push(List_t *list, void *item)
   list->items[list->size-1] = item;
 }
 
-void *list_getitem(List_t *list, int idx)
-{
-  if (list->size <= idx) return NULL;
-  return list->items[idx];
-}
-
 void list_pop_first(List_t *list)
 {
   if (list == NULL || list->items == NULL) return;
-
-  for (int i = 1; i < list->size; ++i)
-    list->items[i-1] = list->items[i];
-
+  for (int i = 0; i < list->size-1; ++i) list->items[i] = list->items[i+1];
   list->size--;
 }

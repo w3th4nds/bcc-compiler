@@ -112,6 +112,7 @@ AST_t *parser_parse_assignment(Parser_t *parser)
   AST_t *ast = init_ast(AST_ASSIGNMENT);
   if (is_decl(parser)) {
     ast->decl = parser_parse_decl(parser, true);
+    ast->name = ast->decl->name;
   }
   else {
     ast->name = parser_get_value(parser);

@@ -27,15 +27,20 @@ typedef struct {
 } BinopResult_t;
 
 char *asm_generate(ScopeManager_t *scope_manager, AST_t *root);
-char *asm_access(Variable_t *var);
+char *asm_access(AsmCtx_t *ctx, AST_t *node);
 char *asm_func_def(AsmCtx_t *ctx);
+char *asm_compound(AsmCtx_t *ctx);
 char *asm_return(AsmCtx_t *ctx);
 char *asm_assignment(AsmCtx_t *ctx);
 char *asm_call(AsmCtx_t *ctx, AST_t *node);
+char *asm_while(AsmCtx_t *ctx);
+char *asm_condition(AsmCtx_t *ctx, AST_t *node, char *jmp_label);
 
 BinopResult_t *binop_evaluate(AsmCtx_t *ctx, AST_t *node);
 bool binop_iscomputable(AST_t *node);
 long binop_evaluate_(AST_t *node);
 void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res);
+
+char *make_label(void);
 
 #endif

@@ -162,33 +162,33 @@ Token_t *lexer_next_token(Lexer_t *lexer)
       case ']': return lexer_advance_current(lexer, TOKEN_RBRACKET);
       case '"': return lexer_advance_with(lexer, lexer_parse_string(lexer));
       case '=':
-        if (lexer_peek(lexer, 1) == '=') return lexer_advance_with(lexer, init_token("==", TOKEN_EQUALSEQUALS));
+        if (lexer_peek(lexer, 1) == '=') return lexer_advance_with(lexer, init_token("==", TOKEN_EQEQ));
         else return lexer_advance_current(lexer, TOKEN_EQUALS);
       case '+':
         if (lookahead == '+') return lexer_advance_with(lexer, init_token("++", TOKEN_PLUSPLUS));
-        else if (lookahead == '=') return lexer_advance_with(lexer, init_token("+=", TOKEN_PLUSEQUALS));
+        else if (lookahead == '=') return lexer_advance_with(lexer, init_token("+=", TOKEN_PLUSEQ));
         else return lexer_advance_current(lexer, TOKEN_PLUS);
       case '-':
         if (lookahead == '-') return lexer_advance_with(lexer, init_token("--", TOKEN_MINUSMINUS));
-        else if (lookahead == '=') return lexer_advance_with(lexer, init_token("-=", TOKEN_MINUSEQUALS));
+        else if (lookahead == '=') return lexer_advance_with(lexer, init_token("-=", TOKEN_MINUSEQ));
         else return lexer_advance_current(lexer, TOKEN_MINUS);
       case '!':
-        if (lookahead == '=') return lexer_advance_with(lexer, init_token("!=", TOKEN_NOTEQUALS));
+        if (lookahead == '=') return lexer_advance_with(lexer, init_token("!=", TOKEN_NOTEQ));
         else return lexer_advance_current(lexer, TOKEN_NOT);
       case '^':
-        if (lookahead == '=') return lexer_advance_with(lexer, init_token("^=", TOKEN_XOREQUALS));
+        if (lookahead == '=') return lexer_advance_with(lexer, init_token("^=", TOKEN_XOREQ));
         else return lexer_advance_current(lexer, TOKEN_XOR);
       case '/':
         if (lookahead == '/') lexer_skip_line(lexer);
         else if (lookahead == '*') lexer_skip_to_comment_end(lexer);
-        else if (lookahead == '=') return lexer_advance_with(lexer, init_token("/=", TOKEN_DIVEQUALS));
+        else if (lookahead == '=') return lexer_advance_with(lexer, init_token("/=", TOKEN_DIVEQ));
         else return lexer_advance_current(lexer, TOKEN_DIV);
         break;
       case '*': // how to handle pointers ?
-        if (lookahead == '=') return lexer_advance_with(lexer, init_token("*=", TOKEN_MULEQUALS));
+        if (lookahead == '=') return lexer_advance_with(lexer, init_token("*=", TOKEN_MULEQ));
         else return lexer_advance_current(lexer, TOKEN_MUL);
       case '%':
-        if (lookahead == '=') return lexer_advance_with(lexer, init_token("*=", TOKEN_MODEQUALS));
+        if (lookahead == '=') return lexer_advance_with(lexer, init_token("*=", TOKEN_MODEQ));
         else return lexer_advance_current(lexer, TOKEN_MOD);
       case '<':
         if (lookahead == '=') return lexer_advance_with(lexer, init_token("<=", TOKEN_LE));

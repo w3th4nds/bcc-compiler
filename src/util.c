@@ -16,10 +16,7 @@ char *format(AST_t *node)
     case AST_DECL: snprintf(buf+strlen(buf), sz, "DECL: %s %s,", type_to_str(node->specs_type), node->name); break;
     case AST_COMPOUND: strcat(buf, "COMPOUND,"); break;
     case AST_WHILE: strcat(buf, "WHILE:,"); break;
-    case AST_ASSIGNMENT: 
-      if (node->name == NULL) strcat(buf, "ASSIGNMENT:,");
-      else snprintf(buf+strlen(buf), sz, "ASSIGNMENT: %s,", node->name);
-      break;
+    case AST_ASSIGNMENT: snprintf(buf+strlen(buf), sz, "ASSIGNMENT: %s,", node->name); break;
     default: error_exit("format() - default reached\n");
   }
   return buf;
@@ -42,7 +39,7 @@ void make_ast_graph(AST_t *root)
   List_t *annot = init_list(sizeof(char *));  // annotations for arrows
   list_push(queue, root);
   while (queue->size) {
-    AST_t *node = (AST_t *)list_getitem(queue, 0);
+    AST_t *node = (AST_t *)queue->items[0];
     list_push(list, format(node));
     list_pop_first(queue);
     if (node == NULL) continue;
