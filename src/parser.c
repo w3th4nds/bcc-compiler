@@ -102,6 +102,7 @@ AST_t *parser_parse_statement(Parser_t *parser)
   if (is_assignment(parser))    return parser_parse_assignment(parser);
   if (is_decl(parser))          return parser_parse_decl(parser, true);
   if (is_while(parser))         return parser_parse_while(parser);
+  if (is_for(parser))           return parser_parse_for(parser);
   error_exit("parser_parse_statement() - implement\n");
   return NULL;
 }
@@ -147,6 +148,23 @@ AST_t *parser_parse_while(Parser_t *parser)
   parser_eat(parser, TOKEN_LP);
   AST_t *ast = init_ast(AST_WHILE);
   ast->cond = parser_parse_condition(parser);
+  parser_eat(parser, TOKEN_RP);
+  ast->body = parser_parse_compound(parser);
+  return ast;
+}
+
+AST_t *parser_parse_for(Parser_t *parser)
+{
+  if (PARSE_DEBUG) printf("parser_parse_while()\n");
+  parser_eat(parser, TOKEN_FOR);
+  parser_eat(parser, TOKEN_LP);
+  AST_t *ast = init_ast(AST_FOR);
+  ast->stmt1 = parser_parse_statement(parser);
+  parser_eat(parser, TOKEN_SEMI);
+  // TODO: clean this up
+  ast->stmt2 = parser_parse_condition(parser);
+  parser_eat(parser, TOKEN_SEMI);
+  ast->stmt3 = parser_parse_statement(parser);
   parser_eat(parser, TOKEN_RP);
   ast->body = parser_parse_compound(parser);
   return ast;
@@ -432,6 +450,14 @@ bool is_while(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("is_while()\n");
   if (parser_peek(parser, 0)->kind == TOKEN_WHILE && \
+      parser_peek(parser, 1)->kind == TOKEN_LP) return true;
+  return false;
+}
+
+bool is_for(Parser_t *parser)
+{
+  if (PARSE_DEBUG) printf("is_for()\n");
+  if (parser_peek(parser, 0)->kind == TOKEN_FOR && \
       parser_peek(parser, 1)->kind == TOKEN_LP) return true;
   return false;
 }

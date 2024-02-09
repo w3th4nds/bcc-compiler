@@ -28,6 +28,7 @@ AST_t *parser_parse(Parser_t *parser);
 AST_t *parser_parse_id(Parser_t *parser);
 AST_t *parser_parse_call(Parser_t *parser);
 AST_t *parser_parse_while(Parser_t *parser);
+AST_t *parser_parse_for(Parser_t *parser);
 List_t *parser_parse_list(Parser_t *parser);
 AST_t *parser_parse_comp_list(Parser_t *parser);
 AST_t *parser_parse_expr(Parser_t *parser);
@@ -41,10 +42,12 @@ List_t *parser_parse_params(Parser_t *parser);
 AST_t *parser_parse_specs(Parser_t *parser);
 AST_t *parser_parse_decl(Parser_t *parser, bool add_to_symtab);
 AST_t *parser_parse_function(Parser_t *parser);
+
 bool is_function_def(Parser_t *parser);
 bool is_function_call(Parser_t *parser);
 bool is_assignment(Parser_t *parser);
 bool is_decl(Parser_t *parser);
 bool is_while(Parser_t *parser);
+bool is_for(Parser_t *parser);
 
 #endif

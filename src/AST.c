@@ -26,31 +26,9 @@ char *AST_type_to_str(AstType_t node_type)
     case AST_COMPOUND:    return "AST_COMPOUND";
     case AST_COND:        return "AST_COND";
     case AST_WHILE:       return "AST_WHILE";
+    case AST_FOR:         return "AST_FOR";
     default:                  
       printf("type = %d\n", node_type);
       return "AST_type_to_str(): type not implemented";
-  }
-}
-
-// TODO: implement (?)
-// probably delete since we have graphs now
-char *AST_to_str(AST_t *ast)
-{
-  char *buf = calloc(200, sizeof(char));
-  snprintf(buf, 200, "<AST_t type=%s, ", AST_type_to_str(ast->node_type));
-  switch (ast->node_type) {
-    case AST_COMPOUND:
-      snprintf(buf+strlen(buf), 200, "children=%ld>", ast->children->size);
-      return buf;
-    case AST_FUNCTION:
-      //snprintf(buf+strlen(buf), 200, "specs=%d, decl=%s>", AST_type_to_str(ast->node_type), ast->children->size);
-    case AST_CALL:
-    case AST_ASSIGNMENT:
-    case AST_RETURN:
-    case AST_BINOP:
-    case AST_NUM:
-    case AST_ID:
-    default:
-      return "AST_to_str(): implement";
   }
 }

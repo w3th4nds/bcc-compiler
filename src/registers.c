@@ -31,10 +31,23 @@ char *get_used_register(RegisterManager_t *reg_manager, int last_used_idx, size_
   int n = 1;
   for (GenReg i = (GenRegs_end-1); i >= 0; --i) {
     if (reg_manager->inuse[i] != NOT_INUSE && n++ == last_used_idx)
-      return genreg_enum_to_str(i, size);
+        return genreg_enum_to_str(i, size);
   }
   error_exit("get_used_register() - could not find requested register\n");
   return NULL;
+}
+
+// same as get_used_register(), but return the its size
+// used by binops to determine register size to use for the operation result
+size_t get_used_register_size(RegisterManager_t *reg_manager, int last_used_idx)
+{
+  int n = 1;
+  for (GenReg i = (GenRegs_end-1); i >= 0; --i) {
+    if (reg_manager->inuse[i] != NOT_INUSE && n++ == last_used_idx)
+      return reg_manager->inuse[i] == INUSE8 ? 8 : 4;
+  }
+  error_exit("get_used_register() - could not find requested register\n");
+  return 0;
 }
 
 void free_register(RegisterManager_t *reg_manager, char *reg)

@@ -16,8 +16,11 @@ char *format(AST_t *node)
     case AST_DECL: snprintf(buf+strlen(buf), sz, "DECL: %s %s,", type_to_str(node->specs_type), node->name); break;
     case AST_COMPOUND: strcat(buf, "COMPOUND,"); break;
     case AST_WHILE: strcat(buf, "WHILE:,"); break;
+    case AST_FOR: strcat(buf, "FOR:,"); break;
     case AST_ASSIGNMENT: snprintf(buf+strlen(buf), sz, "ASSIGNMENT: %s,", node->name); break;
-    default: error_exit("format() - default reached\n");
+    default:
+      printf("node type = %s\n", AST_type_to_str(node->node_type));
+      error_exit("format() - default reached\n");
   }
   return buf;
 }
@@ -31,6 +34,7 @@ char *format_annot(AST_t *paren, AST_t *child, char *annot)
 }
 
 // format AST in a way that can be used by plot.py
+// TODO: clean up eventually
 void make_ast_graph(AST_t *root)
 {
   assert(root != NULL && "create_ast_file - root is NULL");
@@ -103,6 +107,20 @@ void make_ast_graph(AST_t *root)
         list_push(list, format(node->cond));
         list_push(annot, format_annot(node, node->cond, "cond"));
         list_push(queue, node->cond);
+        list_push(list, format(node->body));
+        list_push(annot, format_annot(node, node->body, "body"));
+        list_push(queue, node->body);
+        break;
+      case AST_FOR:
+        list_push(list, format(node->stmt1));
+        list_push(annot, format_annot(node, node->stmt1, "stmt1"));
+        list_push(queue, node->stmt1);
+        list_push(list, format(node->stmt2));
+        list_push(annot, format_annot(node, node->stmt2, "stmt2"));
+        list_push(queue, node->stmt2);
+        list_push(list, format(node->stmt3));
+        list_push(annot, format_annot(node, node->stmt3, "stmt3"));
+        list_push(queue, node->stmt3);
         list_push(list, format(node->body));
         list_push(annot, format_annot(node, node->body, "body"));
         list_push(queue, node->body);

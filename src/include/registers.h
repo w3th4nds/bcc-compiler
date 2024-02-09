@@ -44,6 +44,7 @@ RegisterManager_t *init_register_manager(void);
 char *get_arg_register(int arg_n, size_t size);
 char *get_register(RegisterManager_t *reg_manager, size_t size);
 char *get_used_register(RegisterManager_t *reg_manager, int last_used_idx, size_t size);
+size_t get_used_register_size(RegisterManager_t *reg_manager, int last_used_idx);
 void free_register(RegisterManager_t *reg_manager, char *reg);
 char *argreg_enum_to_str(ArgReg reg, size_t size);
 char *genreg_enum_to_str(GenReg reg, size_t size);

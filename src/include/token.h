@@ -49,6 +49,7 @@ typedef enum {
   TOKEN_LONG,
   TOKEN_VOID,
   TOKEN_WHILE,
+  TOKEN_FOR,
   TOKEN_EOF
 } TokenKind_t;
 

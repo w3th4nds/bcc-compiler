@@ -4,11 +4,11 @@
 // too much spaghetti code
 // think architecture through
 
-AsmCtx_t *init_asm_ctx(ScopeManager_t *scope_manager, AST_t *node)
-{ AsmCtx_t *ctx = calloc(1, sizeof(AsmCtx_t));
+AsmCtx_t *init_asm_ctx(ScopeManager_t *scope_manager)
+{
+  AsmCtx_t *ctx = calloc(1, sizeof(AsmCtx_t));
   ctx->scope_manager = scope_manager;
   ctx->reg_manager = init_register_manager();
-  ctx->node = node;
   return ctx;
 }
 
@@ -16,7 +16,7 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
 {
   if (ASM_DEBUG) printf("asm_generate()\n");
   assert(root != NULL && root->node_type == AST_COMPOUND);
-  AsmCtx_t *ctx = init_asm_ctx(scope_manager, root);
+  AsmCtx_t *ctx = init_asm_ctx(scope_manager);
 
   char *code = calloc(2, sizeof(char));
   // declare functions as global
@@ -36,15 +36,13 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
 
   char *next_code;
   for (int i = 0; i < root->children->size; ++i) {
-    ctx->node = root->children->items[i];
-    switch (ctx->node->node_type) {
-      case AST_FUNCTION:
-        next_code = asm_func_def(ctx);
-        break;
+    AST_t *node = root->children->items[i];
+    switch (node->node_type) {
+      case AST_FUNCTION: next_code = asm_func_def(ctx, node); break;
       case AST_ASSIGNMENT:
       case AST_DECL:
       default:
-        printf("node_type = %s\n", AST_type_to_str(ctx->node->node_type));
+        printf("node_type = %s\n", AST_type_to_str(node->node_type));
         error_exit("asm_generate() - default reached\n");
     }
     code = realloc(code, strlen(code) + strlen(next_code) + 1);
@@ -100,21 +98,20 @@ char *asm_access(AsmCtx_t *ctx, AST_t *node)
   return code;
 }
 
-char *asm_func_def(AsmCtx_t *ctx)
+char *asm_func_def(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_func_def()\n");
-  assert(ctx->node != NULL && ctx->node->node_type == AST_FUNCTION);
+  assert(node != NULL && node->node_type == AST_FUNCTION);
   // set the scope to make things easier
-  scope_set(ctx->scope_manager, ctx->node->name);
-  Scope_t *scope = hashmap_getscope(ctx->scope_manager->scopes, ctx->node->name);
+  scope_set(ctx->scope_manager, node->name);
+  Scope_t *scope = hashmap_getscope(ctx->scope_manager->scopes, node->name);
   char *template = "%s:\npush rbp\nmov rbp, rsp\n";
   size_t sz = strlen(template) + 64;
   char *code = calloc(sz, sizeof(char));
   snprintf(code, sz, template, scope->scope_id);
 
   // parse function body
-  ctx->node = ctx->node->body;
-  char *func_code = asm_compound(ctx);
+  char *func_code = asm_compound(ctx, node->body);
 
   // account for stack red-zone (see notes)
   // allocate stack space as necessary
@@ -142,53 +139,60 @@ char *asm_func_def(AsmCtx_t *ctx)
   return code;
 }
 
-char *asm_compound(AsmCtx_t *ctx)
+char *asm_statement(AsmCtx_t *ctx, AST_t *node)
+{
+  switch (node->node_type) {
+    case AST_RETURN:      return asm_return(ctx, node);
+    case AST_ASSIGNMENT:  return asm_assignment(ctx, node);
+    case AST_CALL:        return asm_call(ctx, node);
+    case AST_WHILE:       return asm_while(ctx, node);
+    case AST_FOR:         return asm_for(ctx, node);
+    case AST_DECL:        return ""; // does nothing in asm phase
+    default:
+      printf("child node_type = %s\n", AST_type_to_str(node->node_type));
+      error_exit("asm_statment() - default reached\n");
+  }
+  return NULL;
+}
+
+char *asm_compound(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_compound()\n");
-  assert(ctx->node != NULL && ctx->node->node_type == AST_COMPOUND);
-  char *next_code, *code = calloc(1, sizeof(char));
-  List_t *children = ctx->node->children;
+  assert(node != NULL && node->node_type == AST_COMPOUND);
+  char *code = calloc(1, sizeof(char));
+  List_t *children = node->children;
   for (int i = 0; i < children->size; ++i) {
-    ctx->node = children->items[i];
-    switch (ctx->node->node_type) {
-      case AST_RETURN:      next_code = asm_return(ctx);          break;
-      case AST_ASSIGNMENT:  next_code = asm_assignment(ctx);      break;
-      case AST_CALL:        next_code = asm_call(ctx, ctx->node); break;
-      case AST_WHILE:       next_code = asm_while(ctx);           break;
-      case AST_DECL: break; // does nothing
-      default:
-        printf("child node_type = %s\n", AST_type_to_str(ctx->node->node_type));
-        error_exit("asm_compound() - default reached\n");
-    }
+    AST_t *child = children->items[i];
+    char *next_code = asm_statement(ctx, child);
     code = realloc(code, strlen(code) + strlen(next_code) + 1);
     strcat(code, next_code);
   }
   return code;
 }
 
-char *asm_return(AsmCtx_t *ctx)
+char *asm_return(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_return()\n");
-  assert(ctx->node != NULL && ctx->node->node_type == AST_RETURN);
+  assert(node != NULL && node->node_type == AST_RETURN);
   size_t sz;
   Scope_t *scope = scope_getcurrentscope(ctx->scope_manager);
   char *ret_reg = type_size(scope->specs_type) == 8 ? "rax" : "eax";
   char *code, *template;
-  switch(ctx->node->value->node_type) {
+  switch(node->value->node_type) {
     case AST_NUM:
       template = "mov %s, 0x%x\n";
       sz = strlen(template) + 24;
       code = calloc(sz, sizeof(char));
-      snprintf(code, sz, template, ret_reg, ctx->node->value->num_value);
+      snprintf(code, sz, template, ret_reg, node->value->num_value);
       break;
     case AST_ID:
       template = "mov %s, %s\n";
       sz = strlen(template) + 32;
       code = calloc(sz, sizeof(char));
-      snprintf(code, sz, template, ret_reg, asm_access(ctx, ctx->node->value));
+      snprintf(code, sz, template, ret_reg, asm_access(ctx, node->value));
       break;
     case AST_BINOP:
-      BinopResult_t *res = binop_evaluate(ctx, ctx->node->value);
+      BinopResult_t *res = binop_evaluate(ctx, node->value);
       if (res->computed) {
         template = "mov %s, 0x%x\n";
         sz = strlen(template) + 24;
@@ -206,7 +210,7 @@ char *asm_return(AsmCtx_t *ctx)
       }
       break;
     case AST_CALL:
-      code = asm_call(ctx, ctx->node->value);
+      code = asm_call(ctx, node->value);
       break;
     default:
       error_exit("asm_return - default case - implement\n");
@@ -214,15 +218,15 @@ char *asm_return(AsmCtx_t *ctx)
   return code;
 }
 
-char *asm_assignment(AsmCtx_t *ctx)
+char *asm_assignment(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_assignment()\n");
-  assert(ctx->node != NULL && ctx->node->node_type == AST_ASSIGNMENT);
-  AST_t *assignee_node = ctx->node->decl == NULL ? ctx->node : ctx->node->decl;
+  assert(node != NULL && node->node_type == AST_ASSIGNMENT);
+  AST_t *assignee_node = node->decl == NULL ? node : node->decl;
   Variable_t *var = scope_getvariable(ctx->scope_manager, assignee_node->name);
   char *code, *template;
   size_t sz;
-  AST_t *assigned_node = ctx->node->value;
+  AST_t *assigned_node = node->value;
   switch (assigned_node->node_type) {
     case AST_NUM:
       template = "mov %s, 0x%x\n";
@@ -318,17 +322,16 @@ char *asm_call(AsmCtx_t *ctx, AST_t *node)
   return code;
 }
 
-char *asm_while(AsmCtx_t *ctx)
+char *asm_while(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_while()\n");
   char *lbl_cond = make_label();
   char *lbl_body = make_label();
   char *template = "jmp %s\n%s:\n%s%s:\n%s";
   // condition
-  char *cond_code = asm_condition(ctx, ctx->node->cond, lbl_body);
+  char *cond_code = asm_condition(ctx, node->cond, lbl_body);
   // body
-  ctx->node = ctx->node->body;
-  char *body_code = asm_compound(ctx);
+  char *body_code = asm_compound(ctx, node->body);
   // join them
   size_t sz = strlen(template) + strlen(cond_code) + strlen(body_code) + 32;
   char *code = calloc(sz, sizeof(char));
@@ -336,18 +339,35 @@ char *asm_while(AsmCtx_t *ctx)
   return code;
 }
 
+char *asm_for(AsmCtx_t *ctx, AST_t *node)
+{
+  if (ASM_DEBUG) printf("asm_for()\n");
+  char *lbl_cond = make_label();
+  char *lbl_body = make_label();
+  char *template = "%sjmp %s\n%s:\n%s%s%s:\n%s";
+  // TODO: this works on the precondition that stmt 1/3 are assignments
+  // which normally they are, but don't have to be
+  // cannot do infinite loops such as for(;;)
+
+  // statement 1
+  char *stmt1_code = asm_statement(ctx, node->stmt1);
+  // statement 2
+  char *cond_code = asm_condition(ctx, node->stmt2, lbl_body);
+  // statement 3
+  char *stmt3_code = asm_statement(ctx, node->stmt3);
+  // body
+  char *body_code = asm_compound(ctx, node->body);
+  size_t sz = strlen(stmt1_code) + strlen(cond_code) + strlen(stmt3_code) + strlen(body_code) \
+              + strlen(lbl_body) + strlen(lbl_cond) + strlen(template) + 1;
+  char *code = calloc(sz, sizeof(char));
+  snprintf(code, sz, template, stmt1_code, lbl_cond, lbl_body, body_code, stmt3_code, lbl_cond, cond_code);
+  return code;
+}
+
 char *asm_condition(AsmCtx_t *ctx, AST_t *node, char *jmp_label)
 {
   if (ASM_DEBUG) printf("asm_condition()\n");
   assert(node != NULL && node->node_type == AST_COND);
-  /*
-  char *tmp_code_l = "", *tmp_code_r = "";
-  if (node->left->node_type == AST_BINOP)   tmp_code_l = binop_evaluate(ctx, node->left);
-  if (node->left->node_type == AST_CALL)    tmp_code_l = asm_call(ctx, node->left);
-  if (node->right->node_type == AST_BINOP)  tmp_code_r = binop_evaluate(ctx, node->right);
-  if (node->right->node_type == AST_CALL)   tmp_code_r = asm_call(ctx, node->right);
-  */
-
   char *jmp;
   switch (node->op) {
     case TOKEN_EQEQ:  jmp = "je";   break;
@@ -359,12 +379,13 @@ char *asm_condition(AsmCtx_t *ctx, AST_t *node, char *jmp_label)
     default: error_exit("asm_condition() unknown op\n");
   }
 
-  //char *template = "%s%scmp %s, %s\n%s %s\n";
+  // TODO: add binop/call support for conditions
+
   char *template = "cmp %s, %s\n%s %s\n";
-  //size_t sz = strlen(tmp_code_l) + strlen(tmp_code_r) + strlen(template) + 88;
   size_t sz = strlen(template) + 88;
   char *code = calloc(sz, sizeof(char));
-  snprintf(code, sz, template, asm_access(ctx, node->left), asm_access(ctx, node->right), jmp, jmp_label);
+
+  snprintf(code+strlen(code), sz, template, asm_access(ctx, node->left), asm_access(ctx, node->right), jmp, jmp_label);
   return code;
 }
 
@@ -449,9 +470,10 @@ void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res)
       }
       sz = strlen(template) + 16;
       next_code = calloc(sz, sizeof(char));
-      // TODO: fix hardcode sizeof(long) size (?)
-      regA = get_used_register(ctx->reg_manager, 2, sizeof(long));
-      regB = get_used_register(ctx->reg_manager, 1, sizeof(long));
+      // get the min size of the last 2 used registers
+      size_t min_sz = MIN(get_used_register_size(ctx->reg_manager, 1), get_used_register_size(ctx->reg_manager, 2));
+      regA = get_used_register(ctx->reg_manager, 2, min_sz);
+      regB = get_used_register(ctx->reg_manager, 1, min_sz);
       snprintf(next_code, sz, template, regA, regB);
       free_register(ctx->reg_manager, regB);
       break;

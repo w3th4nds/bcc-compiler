@@ -45,6 +45,11 @@
   AST_WHILE:
     - cond
     - body
+  AST_FOR:
+    - stmt1
+    - stmt2
+    - stmt3
+    - body
 */
 
 // AST types
@@ -60,6 +65,7 @@ typedef enum {
   AST_COMPOUND,
   AST_COND,
   AST_WHILE,
+  AST_FOR,
 } AstType_t;
 
 typedef struct AST_STRUCT {
@@ -76,6 +82,9 @@ typedef struct AST_STRUCT {
   struct AST_STRUCT *right;
   struct AST_STRUCT *decl;
   struct AST_STRUCT *cond;
+  struct AST_STRUCT *stmt1;
+  struct AST_STRUCT *stmt2;
+  struct AST_STRUCT *stmt3;
   // different names for clarity
   union {
     List_t *children;
@@ -88,6 +97,5 @@ typedef struct AST_STRUCT {
 
 AST_t *init_ast(AstType_t node_type);
 char *AST_type_to_str(AstType_t node_type);
-char *AST_to_str(AST_t *ast);
 
 #endif

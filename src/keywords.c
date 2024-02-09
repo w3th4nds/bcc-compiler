@@ -8,5 +8,6 @@ TokenKind_t is_keyword(char *value)
   if (strcmp(value, KW_LONG) == 0)    return TOKEN_LONG;
   if (strcmp(value, KW_VOID) == 0)    return TOKEN_VOID;
   if (strcmp(value, KW_WHILE) == 0)   return TOKEN_WHILE;
+  if (strcmp(value, KW_FOR) == 0)     return TOKEN_FOR;
   else return -1;
 }
