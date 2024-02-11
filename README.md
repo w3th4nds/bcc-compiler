@@ -12,8 +12,6 @@ Simplicity is valued more highly than support for more features. Will try to kee
 
 Taking inspiration from other (hobby) compilers, **no** memory management **is** the memory management scheme here.
 
-Will not compile itself. Unless things get out of hand.
-
 **Work in progress**
 
 An example of what `bcc` can do as of now:
@@ -104,6 +102,9 @@ ret
 **Notes:**
 
 ```
+
+The register use is just plain wrong. Deal with it.
+
 Q: Why is there no "sub rsp, X" in all my functions, even though local variables are declared ?
 
 A: The System V ABI for x86-64 specifies a red zone of 128 bytes below %rsp. These 128 bytes belong to the function as long as it doesn't call any other function (it is a leaf function).

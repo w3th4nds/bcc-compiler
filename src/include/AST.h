@@ -10,6 +10,7 @@
 
 /*
   Each AST type uses different 
+  AST_NOP: -> empty
   AST_NUMS:
     - num_value
   AST_ID:
@@ -54,6 +55,7 @@
 
 // AST types
 typedef enum {
+  AST_NOP,
   AST_NUM,
   AST_ID,
   AST_DECL,

@@ -37,10 +37,11 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
   char *next_code;
   for (int i = 0; i < root->children->size; ++i) {
     AST_t *node = root->children->items[i];
+    scope_set(ctx->scope_manager, NULL); // reset scope to global
     switch (node->node_type) {
       case AST_FUNCTION: next_code = asm_func_def(ctx, node); break;
       case AST_ASSIGNMENT:
-      case AST_DECL:
+      case AST_DECL: break;
       default:
         printf("node_type = %s\n", AST_type_to_str(node->node_type));
         error_exit("asm_generate() - default reached\n");
@@ -50,6 +51,11 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
     //printf("code so far = \n%s\n", code);
   }
   return code;
+}
+
+char *asm_nop(void)
+{
+  return "";
 }
 
 char *asm_access(AsmCtx_t *ctx, AST_t *node)
@@ -142,6 +148,7 @@ char *asm_func_def(AsmCtx_t *ctx, AST_t *node)
 char *asm_statement(AsmCtx_t *ctx, AST_t *node)
 {
   switch (node->node_type) {
+    case AST_NOP:         return asm_nop();
     case AST_RETURN:      return asm_return(ctx, node);
     case AST_ASSIGNMENT:  return asm_assignment(ctx, node);
     case AST_CALL:        return asm_call(ctx, node);
@@ -218,12 +225,13 @@ char *asm_return(AsmCtx_t *ctx, AST_t *node)
   return code;
 }
 
+// TODO: account for operation performed
+// to support +=, -=, etc
 char *asm_assignment(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_assignment()\n");
   assert(node != NULL && node->node_type == AST_ASSIGNMENT);
-  AST_t *assignee_node = node->decl == NULL ? node : node->decl;
-  Variable_t *var = scope_getvariable(ctx->scope_manager, assignee_node->name);
+  Variable_t *var = scope_getvariable(ctx->scope_manager, node->name);
   char *code, *template;
   size_t sz;
   AST_t *assigned_node = node->value;
@@ -232,7 +240,7 @@ char *asm_assignment(AsmCtx_t *ctx, AST_t *node)
       template = "mov %s, 0x%x\n";
       sz = strlen(template) + 24;
       code = calloc(sz, sizeof(char));
-      snprintf(code, sz, template, asm_access(ctx, assignee_node), assigned_node->num_value);
+      snprintf(code, sz, template, asm_access(ctx, node), assigned_node->num_value);
       break;
     case AST_ID:
       Variable_t *assigned_var = scope_getvariable(ctx->scope_manager, assigned_node->name);
@@ -243,13 +251,13 @@ char *asm_assignment(AsmCtx_t *ctx, AST_t *node)
         char *proxy_template = "mov %s, %s\nmov %s, %s\n";
         sz = strlen(proxy_template) + 64;
         code = calloc(sz, sizeof(char));
-        snprintf(code, sz, proxy_template, proxy_reg, asm_access(ctx, assigned_node), asm_access(ctx, assignee_node), assign_reg);
+        snprintf(code, sz, proxy_template, proxy_reg, asm_access(ctx, assigned_node), asm_access(ctx, node), assign_reg);
       }
       else {
         template = "mov %s, %s\n";
         sz = strlen(template) + 32;
         code = calloc(sz, sizeof(char));
-        snprintf(code, sz, template, asm_access(ctx, assignee_node), asm_access(ctx, assigned_node));
+        snprintf(code, sz, template, asm_access(ctx, node), asm_access(ctx, assigned_node));
       }
       break;
     case AST_BINOP:
@@ -258,7 +266,7 @@ char *asm_assignment(AsmCtx_t *ctx, AST_t *node)
         template = "mov %s, 0x%x\n";
         sz = strlen(template) + 24;
         code = calloc(sz, sizeof(char));
-        snprintf(code, sz, template, asm_access(ctx, assignee_node), res->value);
+        snprintf(code, sz, template, asm_access(ctx, node), res->value);
       }
       else {
         code = res->code;
@@ -266,7 +274,7 @@ char *asm_assignment(AsmCtx_t *ctx, AST_t *node)
         template = "mov %s, %s\n";
         sz = strlen(template) + 24;
         code = realloc(code, strlen(code) + sz);
-        snprintf(code+strlen(code), sz, template, asm_access(ctx, assignee_node), result_reg);
+        snprintf(code+strlen(code), sz, template, asm_access(ctx, node), result_reg);
         free_register(ctx->reg_manager, result_reg);
       }
       break;
@@ -277,7 +285,7 @@ char *asm_assignment(AsmCtx_t *ctx, AST_t *node)
       template = "mov %s, %s\n";
       sz = strlen(template) + 24;
       code = realloc(code, strlen(code) + sz);
-      snprintf(code+strlen(code), sz, template, asm_access(ctx, assignee_node), ret_reg);
+      snprintf(code+strlen(code), sz, template, asm_access(ctx, node), ret_reg);
       break;
     default:
       error_exit("asm_assignment() - default reached\n");
@@ -345,13 +353,10 @@ char *asm_for(AsmCtx_t *ctx, AST_t *node)
   char *lbl_cond = make_label();
   char *lbl_body = make_label();
   char *template = "%sjmp %s\n%s:\n%s%s%s:\n%s";
-  // TODO: this works on the precondition that stmt 1/3 are assignments
-  // which normally they are, but don't have to be
-  // cannot do infinite loops such as for(;;)
-
+  // TODO: 2nd statement doesn't have to be a condition - fix ?
   // statement 1
   char *stmt1_code = asm_statement(ctx, node->stmt1);
-  // statement 2
+  // statement 2 (condition)
   char *cond_code = asm_condition(ctx, node->stmt2, lbl_body);
   // statement 3
   char *stmt3_code = asm_statement(ctx, node->stmt3);
@@ -463,10 +468,25 @@ void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res)
         case TOKEN_PLUS:  template = "add %s, %s\n";   break;
         case TOKEN_MINUS: template = "sub %s, %s\n";   break;
         case TOKEN_MUL:   template = "imul %s, %s\n";  break;
-        case TOKEN_DIV:   template = "idiv %s, %s\n";  break;
+        case TOKEN_DIV: break; // special case
         default:
           printf("token = %s %s\n", token_kind_to_str(node->op), node->name);
           error_exit("binop_get_code() - AST_BINOP probably implement something\n");
+      }
+      // "div src": divides rax/src
+      // the ratio is put into rax, and the remainder in rdx
+      // on input, rdx MUST be zero
+      if (node->op == TOKEN_DIV) {
+        template = "mov rdx, 0x0\nmov %s, %s\nidiv %s\nmov %s, %s\n";
+        sz = strlen(template) + 16;
+        next_code = calloc(sz, sizeof(char));
+        size_t reg_sz = get_used_register_size(ctx->reg_manager, 1);
+        regA = get_used_register(ctx->reg_manager, 2, reg_sz);
+        regB = get_used_register(ctx->reg_manager, 1, reg_sz);
+        char *regDiv =  reg_sz == 8 ? "rax" : "eax";
+        snprintf(next_code, sz, template, regDiv, regA, regB, regA, regDiv);
+        free_register(ctx->reg_manager, regB);
+        break;
       }
       sz = strlen(template) + 16;
       next_code = calloc(sz, sizeof(char));

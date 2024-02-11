@@ -75,6 +75,14 @@ AST_t *parser_parse_string(Parser_t *parser)
   return NULL;
 }
 
+AST_t *parser_parse_nop(Parser_t *parser)
+{
+  // empty AST
+  if (PARSE_DEBUG) printf("parser_parse_nop()\n");
+  AST_t *ast = init_ast(AST_NOP);
+  return ast;
+}
+
 AST_t *parser_parse_num(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_num()\n");
@@ -97,14 +105,15 @@ AST_t *parser_parse_return(Parser_t *parser)
 AST_t *parser_parse_statement(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_statement()\n");
+  if (parser->token->kind == TOKEN_SEMI)   return parser_parse_nop(parser);
   if (parser->token->kind == TOKEN_RETURN) return parser_parse_return(parser);
   if (is_function_call(parser)) return parser_parse_call(parser);
   if (is_assignment(parser))    return parser_parse_assignment(parser);
   if (is_decl(parser))          return parser_parse_decl(parser, true);
   if (is_while(parser))         return parser_parse_while(parser);
   if (is_for(parser))           return parser_parse_for(parser);
-  error_exit("parser_parse_statement() - implement\n");
-  return NULL;
+  if (PARSE_DEBUG) printf("[*] Warning - parsing AST_NOP\n");
+  return parser_parse_nop(parser);
 }
 
 AST_t *parser_parse_assignment(Parser_t *parser)

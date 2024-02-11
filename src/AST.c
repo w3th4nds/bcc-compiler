@@ -15,6 +15,7 @@ AST_t *init_ast(AstType_t node_type)
 char *AST_type_to_str(AstType_t node_type)
 {
   switch (node_type) {
+    case AST_NOP:         return "AST_NOP";
     case AST_NUM:         return "AST_NUM";
     case AST_ID:          return "AST_ID";
     case AST_DECL:        return "AST_DECL";

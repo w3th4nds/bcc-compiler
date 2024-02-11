@@ -6,6 +6,7 @@ char *format(AST_t *node)
   char *buf = calloc(sz, sizeof(char));
   snprintf(buf, sz, "[%ld] ", node->node_id);
   switch (node->node_type) {
+    case AST_NOP: strcat(buf, "NOP,"); break;
     case AST_NUM: snprintf(buf+strlen(buf), sz, "NUM: %ld,", node->num_value); break;
     case AST_ID: snprintf(buf+strlen(buf), sz, "ID: %s,", node->name); break;
     case AST_CALL: snprintf(buf+strlen(buf), sz, "CALL: %s(),", node->name); break;
@@ -49,6 +50,7 @@ void make_ast_graph(AST_t *root)
     if (node == NULL) continue;
     switch (node->node_type) {
       // terminals
+      case AST_NOP:
       case AST_NUM:
       case AST_ID:
       case AST_DECL:

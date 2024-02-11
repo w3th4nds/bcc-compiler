@@ -24,5 +24,5 @@ def create_program_graph(fname):
 
     
 if __name__ == '__main__':
-  # created by the compiler
+  # the data file is created by the compiler
   create_program_graph('AST_data.txt')
