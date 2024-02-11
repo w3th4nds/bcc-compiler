@@ -9,7 +9,9 @@
 #include <string.h>
 
 /*
-  Each AST type uses different 
+  A single AST_STRUCT is used for all AST types,
+  Each AST type uses different fields:
+
   AST_NOP: -> empty
   AST_NUMS:
     - num_value
@@ -47,10 +49,14 @@
     - cond
     - body
   AST_FOR:
-    - stmt1
-    - stmt2
-    - stmt3
+    - stmt_initializer
+    - cond
+    - stmt_update
     - body
+  AST_IF:
+    - cond
+    - ifbody
+    - elsebody
 */
 
 // AST types
@@ -68,8 +74,12 @@ typedef enum {
   AST_COND,
   AST_WHILE,
   AST_FOR,
+  AST_IF,
 } AstType_t;
 
+// since one struct is used for all AST types,
+// saving some memory with unions
+// on fields that cannot coexist in a single AST type
 typedef struct AST_STRUCT {
   AstType_t node_type;
   char *name;
@@ -79,22 +89,24 @@ typedef struct AST_STRUCT {
   union {
     struct AST_STRUCT *value;
     struct AST_STRUCT *body;
+    struct AST_STRUCT *ifbody;
   };
-  struct AST_STRUCT *left;
+  union {
+    struct AST_STRUCT *elsebody;
+    struct AST_STRUCT *decl;
+    struct AST_STRUCT *left;
+  };
   struct AST_STRUCT *right;
-  struct AST_STRUCT *decl;
+  struct AST_STRUCT *stmt_initializer;
   struct AST_STRUCT *cond;
-  struct AST_STRUCT *stmt1;
-  struct AST_STRUCT *stmt2;
-  struct AST_STRUCT *stmt3;
-  // different names for clarity
+  struct AST_STRUCT *stmt_update;
   union {
     List_t *children;
     List_t *params;
     List_t *args;
   };
   // only used for creating graphs
-  long node_id;
+  unsigned long node_id;
 } AST_t;
 
 AST_t *init_ast(AstType_t node_type);

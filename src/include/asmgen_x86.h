@@ -16,6 +16,7 @@
 typedef struct {
   ScopeManager_t *scope_manager;
   RegisterManager_t *reg_manager;
+  char *current_end_label;
 } AsmCtx_t;
 
 // if computed -> use value
@@ -33,10 +34,11 @@ char *asm_statement(AsmCtx_t *ctx, AST_t *node);
 char *asm_compound(AsmCtx_t *ctx, AST_t *node);
 char *asm_return(AsmCtx_t *ctx, AST_t *node);
 char *asm_assignment(AsmCtx_t *ctx, AST_t *node);
+char *asm_if(AsmCtx_t *ctx, AST_t *node);
 char *asm_call(AsmCtx_t *ctx, AST_t *node);
 char *asm_while(AsmCtx_t *ctx, AST_t *node);
 char *asm_for(AsmCtx_t *ctx, AST_t *node);
-char *asm_condition(AsmCtx_t *ctx, AST_t *node, char *jmp_label);
+char *asm_condition(AsmCtx_t *ctx, AST_t *node, char *jmp_label, bool jmp_on_true);
 
 BinopResult_t *binop_evaluate(AsmCtx_t *ctx, AST_t *node);
 bool binop_iscomputable(AST_t *node);

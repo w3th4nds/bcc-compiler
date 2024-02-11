@@ -53,11 +53,6 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
   return code;
 }
 
-char *asm_nop(void)
-{
-  return "";
-}
-
 char *asm_access(AsmCtx_t *ctx, AST_t *node)
 {
   char *code, *template;
@@ -112,12 +107,16 @@ char *asm_func_def(AsmCtx_t *ctx, AST_t *node)
   scope_set(ctx->scope_manager, node->name);
   Scope_t *scope = hashmap_getscope(ctx->scope_manager->scopes, node->name);
   char *template = "%s:\npush rbp\nmov rbp, rsp\n";
+  char *lbl_end = make_label();
+  ctx->current_end_label = lbl_end;
   size_t sz = strlen(template) + 64;
   char *code = calloc(sz, sizeof(char));
   snprintf(code, sz, template, scope->scope_id);
 
   // parse function body
   char *func_code = asm_compound(ctx, node->body);
+  func_code = realloc(func_code, strlen(func_code) + strlen(lbl_end) + 8);
+  snprintf(func_code+strlen(func_code), strlen(lbl_end) + 8, "%s:\n", lbl_end);
 
   // account for stack red-zone (see notes)
   // allocate stack space as necessary
@@ -148,13 +147,14 @@ char *asm_func_def(AsmCtx_t *ctx, AST_t *node)
 char *asm_statement(AsmCtx_t *ctx, AST_t *node)
 {
   switch (node->node_type) {
-    case AST_NOP:         return asm_nop();
+    case AST_NOP:
+    case AST_DECL:        return "";
     case AST_RETURN:      return asm_return(ctx, node);
     case AST_ASSIGNMENT:  return asm_assignment(ctx, node);
     case AST_CALL:        return asm_call(ctx, node);
+    case AST_IF:          return asm_if(ctx, node);
     case AST_WHILE:       return asm_while(ctx, node);
     case AST_FOR:         return asm_for(ctx, node);
-    case AST_DECL:        return ""; // does nothing in asm phase
     default:
       printf("child node_type = %s\n", AST_type_to_str(node->node_type));
       error_exit("asm_statment() - default reached\n");
@@ -222,6 +222,8 @@ char *asm_return(AsmCtx_t *ctx, AST_t *node)
     default:
       error_exit("asm_return - default case - implement\n");
   }
+  code = realloc(code, strlen(code) + strlen(ctx->current_end_label) + 8);
+  snprintf(code+strlen(code), strlen(ctx->current_end_label) + 8, "jmp %s\n", ctx->current_end_label); 
   return code;
 }
 
@@ -330,6 +332,32 @@ char *asm_call(AsmCtx_t *ctx, AST_t *node)
   return code;
 }
 
+char *asm_if(AsmCtx_t *ctx, AST_t *node)
+{
+  if (ASM_DEBUG) printf("asm_if()\n");
+  char *lbl_skip = make_label();
+  char *ifbody_code = asm_compound(ctx, node->ifbody);
+  char *cond_code, *code;
+  size_t sz;
+  if (node->elsebody->node_type == AST_NOP) {
+    cond_code = asm_condition(ctx, node->cond, lbl_skip, false);
+    char *template = "%s%s%s:\n";
+    sz = strlen(template) + strlen(lbl_skip) + strlen(cond_code) + strlen(ifbody_code) + 1;
+    code = calloc(sz, sizeof(char));
+    snprintf(code, sz, template, cond_code, ifbody_code, lbl_skip);
+  }
+  else {
+    char *lbl_else = make_label();
+    cond_code = asm_condition(ctx, node->cond, lbl_else, false);
+    char *elsebody_code = asm_compound(ctx, node->elsebody);
+    char *template = "%s%sjmp %s\n%s:\n%s%s:\n";
+    sz = strlen(template) + strlen(lbl_skip) + strlen(lbl_else) + strlen(cond_code) + strlen(ifbody_code) + strlen(elsebody_code) + 1;
+    code = calloc(sz, sizeof(char));
+    snprintf(code, sz, template, cond_code, ifbody_code, lbl_skip, lbl_else, elsebody_code, lbl_skip);
+  }
+  return code;
+}
+
 char *asm_while(AsmCtx_t *ctx, AST_t *node)
 {
   if (ASM_DEBUG) printf("asm_while()\n");
@@ -337,7 +365,7 @@ char *asm_while(AsmCtx_t *ctx, AST_t *node)
   char *lbl_body = make_label();
   char *template = "jmp %s\n%s:\n%s%s:\n%s";
   // condition
-  char *cond_code = asm_condition(ctx, node->cond, lbl_body);
+  char *cond_code = asm_condition(ctx, node->cond, lbl_body, true);
   // body
   char *body_code = asm_compound(ctx, node->body);
   // join them
@@ -355,33 +383,45 @@ char *asm_for(AsmCtx_t *ctx, AST_t *node)
   char *template = "%sjmp %s\n%s:\n%s%s%s:\n%s";
   // TODO: 2nd statement doesn't have to be a condition - fix ?
   // statement 1
-  char *stmt1_code = asm_statement(ctx, node->stmt1);
+  char *stmt_initializer_code = asm_statement(ctx, node->stmt_initializer);
   // statement 2 (condition)
-  char *cond_code = asm_condition(ctx, node->stmt2, lbl_body);
+  char *cond_code = asm_condition(ctx, node->cond, lbl_body, true);
   // statement 3
-  char *stmt3_code = asm_statement(ctx, node->stmt3);
+  char *stmt_update_code = asm_statement(ctx, node->stmt_update);
   // body
   char *body_code = asm_compound(ctx, node->body);
-  size_t sz = strlen(stmt1_code) + strlen(cond_code) + strlen(stmt3_code) + strlen(body_code) \
+  size_t sz = strlen(stmt_initializer_code) + strlen(cond_code) + strlen(stmt_update_code) + strlen(body_code) \
               + strlen(lbl_body) + strlen(lbl_cond) + strlen(template) + 1;
   char *code = calloc(sz, sizeof(char));
-  snprintf(code, sz, template, stmt1_code, lbl_cond, lbl_body, body_code, stmt3_code, lbl_cond, cond_code);
+  snprintf(code, sz, template, stmt_initializer_code, lbl_cond, lbl_body, body_code, stmt_update_code, lbl_cond, cond_code);
   return code;
 }
 
-char *asm_condition(AsmCtx_t *ctx, AST_t *node, char *jmp_label)
+char *asm_condition(AsmCtx_t *ctx, AST_t *node, char *jmp_label, bool jmp_on_true)
 {
   if (ASM_DEBUG) printf("asm_condition()\n");
   assert(node != NULL && node->node_type == AST_COND);
   char *jmp;
-  switch (node->op) {
-    case TOKEN_EQEQ:  jmp = "je";   break;
-    case TOKEN_NOTEQ: jmp = "jne";  break;
-    case TOKEN_GT:    jmp = "jg";   break;
-    case TOKEN_GE:    jmp = "jge";  break;
-    case TOKEN_LT:    jmp = "jl";   break;
-    case TOKEN_LE:    jmp = "jle";  break;
-    default: error_exit("asm_condition() unknown op\n");
+  if (jmp_on_true)
+    switch (node->op) {
+      case TOKEN_EQEQ:  jmp = "je";   break;
+      case TOKEN_NOTEQ: jmp = "jne";  break;
+      case TOKEN_GT:    jmp = "jg";   break;
+      case TOKEN_GE:    jmp = "jge";  break;
+      case TOKEN_LT:    jmp = "jl";   break;
+      case TOKEN_LE:    jmp = "jle";  break;
+      default: error_exit("asm_condition() unknown op\n");
+    }
+  else {
+    switch (node->op) {
+      case TOKEN_EQEQ:  jmp = "jne";  break;
+      case TOKEN_NOTEQ: jmp = "je";   break;
+      case TOKEN_GT:    jmp = "jle";  break;
+      case TOKEN_GE:    jmp = "jl";   break;
+      case TOKEN_LT:    jmp = "jge";  break;
+      case TOKEN_LE:    jmp = "jg";   break;
+      default: error_exit("asm_condition() unknown op\n");
+    }
   }
 
   // TODO: add binop/call support for conditions
@@ -517,10 +557,10 @@ void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res)
 
 char *make_label(void)
 {
-  static long id = 0;
+  static long label_id = 0;
   char *lbl_template = ".L%ld";
   size_t sz = strlen(lbl_template) + 8;
   char *label = calloc(sz, sizeof(char));
-  snprintf(label, sz, lbl_template, id++);
+  snprintf(label, sz, lbl_template, label_id++);
   return label;
 }

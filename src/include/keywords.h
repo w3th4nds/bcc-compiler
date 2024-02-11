@@ -10,5 +10,7 @@
 #define KW_LONG   "long"
 #define KW_WHILE  "while"
 #define KW_FOR    "for"
+#define KW_IF     "if"
+#define KW_ELSE   "else"
 
 #endif

@@ -110,6 +110,7 @@ AST_t *parser_parse_statement(Parser_t *parser)
   if (is_function_call(parser)) return parser_parse_call(parser);
   if (is_assignment(parser))    return parser_parse_assignment(parser);
   if (is_decl(parser))          return parser_parse_decl(parser, true);
+  if (is_if(parser))            return parser_parse_if(parser);
   if (is_while(parser))         return parser_parse_while(parser);
   if (is_for(parser))           return parser_parse_for(parser);
   if (PARSE_DEBUG) printf("[*] Warning - parsing AST_NOP\n");
@@ -150,6 +151,25 @@ AST_t *parser_parse_call(Parser_t *parser)
   return ast;
 }
 
+AST_t *parser_parse_if(Parser_t *parser)
+{
+  if (PARSE_DEBUG) printf("parser_parse_if()\n");
+  parser_eat(parser, TOKEN_IF);
+  parser_eat(parser, TOKEN_LP);
+  AST_t *ast = init_ast(AST_IF);
+  ast->cond = parser_parse_condition(parser);
+  parser_eat(parser, TOKEN_RP);
+  ast->ifbody = parser_parse_compound(parser);
+  if (parser->token->kind == TOKEN_ELSE) {
+    parser_eat(parser, TOKEN_ELSE);
+    ast->elsebody = parser_parse_compound(parser);
+  }
+  else {
+    ast->elsebody = init_ast(AST_NOP);
+  }
+  return ast;
+}
+
 AST_t *parser_parse_while(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_while()\n");
@@ -168,12 +188,12 @@ AST_t *parser_parse_for(Parser_t *parser)
   parser_eat(parser, TOKEN_FOR);
   parser_eat(parser, TOKEN_LP);
   AST_t *ast = init_ast(AST_FOR);
-  ast->stmt1 = parser_parse_statement(parser);
+  ast->stmt_initializer = parser_parse_statement(parser);
   parser_eat(parser, TOKEN_SEMI);
   // TODO: clean this up
-  ast->stmt2 = parser_parse_condition(parser);
+  ast->cond = parser_parse_condition(parser);
   parser_eat(parser, TOKEN_SEMI);
-  ast->stmt3 = parser_parse_statement(parser);
+  ast->stmt_update = parser_parse_statement(parser);
   parser_eat(parser, TOKEN_RP);
   ast->body = parser_parse_compound(parser);
   return ast;
@@ -455,6 +475,14 @@ bool is_decl(Parser_t *parser)
 }
 
 // TODO: cleanup
+bool is_if(Parser_t *parser)
+{
+  if (PARSE_DEBUG) printf("is_if()\n");
+  if (parser_peek(parser, 0)->kind == TOKEN_IF && \
+      parser_peek(parser, 1)->kind == TOKEN_LP) return true;
+  return false;
+}
+
 bool is_while(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("is_while()\n");

@@ -2,7 +2,7 @@
 
 AST_t *init_ast(AstType_t node_type)
 {
-  static long node_id = 0;
+  static unsigned long node_id = 0;
   AST_t *ast = calloc(1, sizeof(AST_t));
   ast->node_id = node_id++;
   ast->node_type = node_type;
@@ -28,6 +28,7 @@ char *AST_type_to_str(AstType_t node_type)
     case AST_COND:        return "AST_COND";
     case AST_WHILE:       return "AST_WHILE";
     case AST_FOR:         return "AST_FOR";
+    case AST_IF:          return "AST_IF";
     default:                  
       printf("type = %d\n", node_type);
       return "AST_type_to_str(): type not implemented";

@@ -50,6 +50,8 @@ typedef enum {
   TOKEN_VOID,
   TOKEN_WHILE,
   TOKEN_FOR,
+  TOKEN_IF,
+  TOKEN_ELSE,
   TOKEN_EOF
 } TokenKind_t;
 

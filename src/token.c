@@ -57,6 +57,8 @@ const char *token_kind_to_str(TokenKind_t kind)
     case TOKEN_LONG:        return "TOKEN_LONG";
     case TOKEN_VOID:        return "TOKEN_VOID";
     case TOKEN_WHILE:       return "TOKEN_WHILE";
+    case TOKEN_IF:          return "TOKEN_IF";
+    case TOKEN_ELSE:        return "TOKEN_ELSE";
     default:                return "**IMPLEMENT**";
   }
 }
