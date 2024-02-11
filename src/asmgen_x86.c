@@ -118,6 +118,13 @@ char *asm_func_def(AsmCtx_t *ctx, AST_t *node)
   func_code = realloc(func_code, strlen(func_code) + strlen(lbl_end) + 8);
   snprintf(func_code+strlen(func_code), strlen(lbl_end) + 8, "%s:\n", lbl_end);
 
+  // remove unnecessary jump if it exists
+  //jmp .end_label
+  //.end_label:
+  char *junk_jmp = calloc(strlen(lbl_end) + 16, sizeof(char));
+  snprintf(junk_jmp, strlen(lbl_end) + 16, "jmp %s\n%s:\n", lbl_end, lbl_end);
+  remove_substring(func_code, junk_jmp);
+
   // account for stack red-zone (see notes)
   // allocate stack space as necessary
   if (scope->is_leaf && scope->symtab->offset <= STACK_REDZONE_SIZE) {
@@ -563,4 +570,16 @@ char *make_label(void)
   char *label = calloc(sz, sizeof(char));
   snprintf(label, sz, lbl_template, label_id++);
   return label;
+}
+
+// (max one substring instance in str)
+char *remove_substring(char *str, const char *substr)
+{
+  size_t len = strlen(substr);
+  if (len > 0) {
+    char *ptr = str;
+    while ((ptr = strstr(ptr, substr)) != NULL)
+      memmove(ptr, ptr + len, strlen(ptr + len) + 1);
+  }
+  return str;
 }

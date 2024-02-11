@@ -46,5 +46,6 @@ long binop_evaluate_(AST_t *node);
 void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res);
 
 char *make_label(void);
+char *remove_substring(char *str, const char *substr);
 
 #endif
