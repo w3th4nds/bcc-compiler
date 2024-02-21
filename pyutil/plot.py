@@ -19,7 +19,7 @@ def create_program_graph(fname):
 
   graph = Graph(nodes, directed=True, edges=annot)
   outname = f'{fname[:-4]}_graph.png'
-  graph.plot(output_path=outname, orientation='TB', fill_color='#BAC1D2')
+  graph.plot(output_path=outname, orientation='TB', fill_color='#BAC1D2', border_color='#8578fa', shape='doublecircle')
   webbrowser.open(outname)
 
     

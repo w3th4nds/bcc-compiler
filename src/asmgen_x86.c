@@ -17,38 +17,70 @@ char *asm_generate(ScopeManager_t *scope_manager, AST_t *root)
   if (ASM_DEBUG) printf("asm_generate()\n");
   assert(root != NULL && root->node_type == AST_COMPOUND);
   AsmCtx_t *ctx = init_asm_ctx(scope_manager);
-
-  char *code = calloc(2, sizeof(char));
-  // declare functions as global
-  List_t *ids = hashmap_get_all_ids(scope_manager->scopes);
-  for (int i = 0; i < ids->size; ++i) {
-    char *global_template = "global %s\n";
-    size_t global_template_sz = strlen(global_template) + strlen(ids->items[i]) + 1;
-    code = realloc(code, strlen(code) + global_template_sz);
-    snprintf(code+strlen(code), global_template_sz, global_template, (char *)ids->items[i]);
-  }
-
-  // .text section
-  char *textsect = "\nsection .text\n\n";
-  size_t newsz = strlen(code) + strlen(textsect) + 1;
-  code = realloc(code, newsz);
-  strcat(code, textsect);
-
-  char *next_code;
+  List_t *data_code = init_list(sizeof(char *));
+  List_t *bss_code = init_list(sizeof(char *));
+  List_t *func_code = init_list(sizeof(char *));
   for (int i = 0; i < root->children->size; ++i) {
     AST_t *node = root->children->items[i];
     scope_set(ctx->scope_manager, NULL); // reset scope to global
     switch (node->node_type) {
-      case AST_FUNCTION: next_code = asm_func_def(ctx, node); break;
-      case AST_ASSIGNMENT:
-      case AST_DECL: break;
+      case AST_FUNCTION:    list_push(func_code, asm_func_def(ctx, node)); break;
+      case AST_ASSIGNMENT:  list_push(data_code, asm_global_init(ctx, node)); break;
+      case AST_DECL:        list_push(bss_code, asm_global_decl(ctx, node)); break;
       default:
         printf("node_type = %s\n", AST_type_to_str(node->node_type));
         error_exit("asm_generate() - default reached\n");
     }
-    code = realloc(code, strlen(code) + strlen(next_code) + 1);
-    strcat(code, next_code);
-    //printf("code so far = \n%s\n", code);
+  }
+
+  char *code = calloc(2, sizeof(char));
+  // .data
+  if (data_code->size > 0) {
+    char *data_section = "section .data\n";
+    size_t newsz = strlen(code) + strlen(data_section) + 1;
+    code = realloc(code, newsz);
+    strcat(code, data_section);
+    for (int i = 0; i < data_code->size; ++i) {
+      newsz = strlen(code) + strlen(data_code->items[i]) + 1;
+      code = realloc(code, newsz);
+      strcat(code, data_code->items[i]);
+    }
+  }
+  code = realloc(code, strlen(code) + 2);
+  strcat(code, "\n");
+
+  // .bss
+  if (bss_code->size > 0) {
+    char *bss_section = "\nsection .bss\n";
+    size_t newsz = strlen(code) + strlen(bss_section) + 1;
+    code = realloc(code, newsz);
+    strcat(code, bss_section);
+    for (int i = 0; i < bss_code->size; ++i) {
+      newsz = strlen(code) + strlen(bss_code->items[i]) + 1;
+      code = realloc(code, newsz);
+      strcat(code, bss_code->items[i]);
+    }
+  }
+
+  // .text
+  char *text_section = "\nsection .text\n";
+  size_t newsz = strlen(code) + strlen(text_section) + 1;
+  code = realloc(code, newsz);
+  strcat(code, text_section);
+  // declare functions as global
+  List_t *ids = hashmap_get_all_ids(scope_manager->scopes);
+  for (int i = 0; i < ids->size; ++i) {
+    char *global_template = "global %s: function\n";
+    size_t global_template_sz = strlen(global_template) + strlen(ids->items[i]) + 1;
+    code = realloc(code, strlen(code) + global_template_sz);
+    snprintf(code+strlen(code), global_template_sz, global_template, (char *)ids->items[i]);
+  }
+  code = realloc(code, strlen(code) + 2);
+  strcat(code, "\n");
+
+  for (int i = 0; i < func_code->size; ++i) {
+    code = realloc(code, strlen(code) + strlen(func_code->items[i]) + 1);
+    strcat(code, func_code->items[i]);
   }
   return code;
 }
@@ -87,7 +119,16 @@ char *asm_access(AsmCtx_t *ctx, AST_t *node)
           snprintf(code, sz, template, get_arg_register(var->param_n, var->size));
           break;
         case VAR_GLOBAL:
-          printf("asm_access() - implement VAR_GLOBAL\n");
+          switch (var->size) {
+            case sizeof(char):  template = "byte [rel %s]"; break;
+            case sizeof(short): template = "word [rel %s]"; break;
+            case sizeof(int):   template = "dword [rel %s]"; break;
+            case sizeof(long):  template = "qword [rel %s]"; break;
+          }
+          sz = strlen(template) + 32;
+          code = calloc(sz, sizeof(char));
+          snprintf(code, sz, template, node->name);
+          break;
         default:
           error_exit("asm_access() - unknown var->scope\n");
       }
@@ -96,6 +137,42 @@ char *asm_access(AsmCtx_t *ctx, AST_t *node)
       printf("node type = %s\n", AST_type_to_str(node->node_type));
       error_exit("asm_access() - deafult reached\n");
   }
+  return code;
+}
+
+char *asm_global_decl(AsmCtx_t *ctx, AST_t *node)
+{
+  if (ASM_DEBUG) printf("asm_global_decl()\n");
+  char *type;
+  switch (type_size(node->specs_type)) {
+    case sizeof(char):  type = "resb"; break;
+    case sizeof(short): type = "resw"; break;
+    case sizeof(int):   type = "resd"; break;
+    case sizeof(long):  type = "resq"; break;
+  }
+  // hardcoded "1" since arrays are not supported yet
+  char *template = "%s: %s 1\n";
+  size_t sz = strlen(template) + 64;
+  char *code = calloc(sz, sizeof(char));
+  snprintf(code, sz, template, node->name, type);
+  return code;
+}
+
+char *asm_global_init(AsmCtx_t *ctx, AST_t *node)
+{
+  if (ASM_DEBUG) printf("asm_global_init()\n");
+  Variable_t *var = scope_getvariable(ctx->scope_manager, node->name);
+  char *type;
+  switch (var->size) {
+    case sizeof(char):  type = "db"; break;
+    case sizeof(short): type = "dw"; break;
+    case sizeof(int):   type = "dd"; break;
+    case sizeof(long):  type = "dq"; break;
+  }
+  char *template = "%s: %s 0x%x\n";
+  size_t sz = strlen(template) + 64;
+  char *code = calloc(sz, sizeof(char));
+  snprintf(code, sz, template, node->name, type, node->value->num_value);
   return code;
 }
 
@@ -117,13 +194,6 @@ char *asm_func_def(AsmCtx_t *ctx, AST_t *node)
   char *func_code = asm_compound(ctx, node->body);
   func_code = realloc(func_code, strlen(func_code) + strlen(lbl_end) + 8);
   snprintf(func_code+strlen(func_code), strlen(lbl_end) + 8, "%s:\n", lbl_end);
-
-  // remove unnecessary jump if it exists
-  //jmp .end_label
-  //.end_label:
-  char *junk_jmp = calloc(strlen(lbl_end) + 16, sizeof(char));
-  snprintf(junk_jmp, strlen(lbl_end) + 16, "jmp %s\n%s:\n", lbl_end, lbl_end);
-  remove_substring(func_code, junk_jmp);
 
   // account for stack red-zone (see notes)
   // allocate stack space as necessary
@@ -163,7 +233,7 @@ char *asm_statement(AsmCtx_t *ctx, AST_t *node)
     case AST_WHILE:       return asm_while(ctx, node);
     case AST_FOR:         return asm_for(ctx, node);
     default:
-      printf("child node_type = %s\n", AST_type_to_str(node->node_type));
+      printf("node_type = %s\n", AST_type_to_str(node->node_type));
       error_exit("asm_statment() - default reached\n");
   }
   return NULL;
@@ -572,14 +642,19 @@ char *make_label(void)
   return label;
 }
 
-// (max one substring instance in str)
-char *remove_substring(char *str, const char *substr)
+/*
+char *asm_cleanup(AsmCtx_t *ctx, char *code_)
 {
-  size_t len = strlen(substr);
-  if (len > 0) {
-    char *ptr = str;
-    while ((ptr = strstr(ptr, substr)) != NULL)
-      memmove(ptr, ptr + len, strlen(ptr + len) + 1);
+  char *code = calloc(strlen(code_)+1, sizeof(char));
+  memcpy(code, code_, strlen(code_));
+  List_t *asm_list = init_list(sizeof(char *));
+  char *line = strtok(code, "\n");
+  while (line != NULL) {
+    list_push(asm_list, line);
+    line = strtok(NULL, "\n");
   }
-  return str;
+  
+  free(code);
+  return;
 }
+*/

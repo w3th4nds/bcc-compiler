@@ -215,25 +215,6 @@ List_t *parser_parse_list(Parser_t *parser)
   return list;
 }
 
-AST_t *parser_parse_comp_list(Parser_t *parser)
-{
-  if (PARSE_DEBUG) printf("parser_parse_comp_list()\n");
-  // TODO: add bracket support
-  bool ispar = parser->token->kind == TOKEN_LP;
-  parser_eat(parser, ispar ? TOKEN_LP : TOKEN_LBRACE);
-
-  AST_t *ast = init_ast(AST_COMPOUND);
-  if (parser->token->kind != (ispar ? TOKEN_RP : TOKEN_RBRACE)) {
-    list_push(ast->children, parser_parse_expr(parser));
-    while (parser->token->kind == TOKEN_COMMA) {
-      parser_eat(parser, TOKEN_COMMA);
-      list_push(ast->children, parser_parse_expr(parser));
-    }
-  }
-  parser_eat(parser, ispar ? TOKEN_RP : TOKEN_RBRACE);
-  return ast;
-}
-
 AST_t *parser_parse_factor(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_factor()\n");
@@ -307,18 +288,21 @@ AST_t *parser_parse_condition(Parser_t *parser)
 AST_t *parser_parse_compound(Parser_t *parser)
 {
   if (PARSE_DEBUG) printf("parser_parse_compound()\n");
-  if (parser->token->kind == TOKEN_LBRACE)
-    parser_eat(parser, TOKEN_LBRACE);
-
   AST_t *compound = init_ast(AST_COMPOUND);
-  while (parser->token->kind != TOKEN_EOF && parser->token->kind != TOKEN_RBRACE) {
+  if (parser->token->kind == TOKEN_LBRACE) {
+    parser_eat(parser, TOKEN_LBRACE);
+    while (parser->token->kind != TOKEN_EOF && parser->token->kind != TOKEN_RBRACE) {
+      list_push(compound->children, parser_parse_statement(parser));
+      if (parser->token->kind == TOKEN_SEMI)
+        parser_eat(parser, TOKEN_SEMI);
+    }
+    parser_eat(parser, TOKEN_RBRACE);
+  }
+  else { // single statement compound without braces
     list_push(compound->children, parser_parse_statement(parser));
     if (parser->token->kind == TOKEN_SEMI)
       parser_eat(parser, TOKEN_SEMI);
   }
-  if (parser->token->kind == TOKEN_RBRACE)
-    parser_eat(parser, TOKEN_RBRACE);
-
   return compound;
 }
 

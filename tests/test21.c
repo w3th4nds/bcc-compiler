@@ -6,11 +6,8 @@ int dummy(int x)
 int main(void)
 {
   int x = 50;
-  if (x >= 40) {
+  if (x <= 40) {
     return dummy(x);
   }
-  else {
-    x = 1;
-    return x;
-  }
+  return x;
 }

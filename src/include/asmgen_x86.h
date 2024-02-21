@@ -29,6 +29,8 @@ typedef struct {
 
 char *asm_generate(ScopeManager_t *scope_manager, AST_t *root);
 char *asm_access(AsmCtx_t *ctx, AST_t *node);
+char *asm_global_decl(AsmCtx_t *ctx, AST_t *node);
+char *asm_global_init(AsmCtx_t *ctx, AST_t *node);
 char *asm_func_def(AsmCtx_t *ctx, AST_t *node);
 char *asm_statement(AsmCtx_t *ctx, AST_t *node);
 char *asm_compound(AsmCtx_t *ctx, AST_t *node);
@@ -46,6 +48,6 @@ long binop_evaluate_(AST_t *node);
 void binop_gen_code(AsmCtx_t *ctx, AST_t *node, BinopResult_t *res);
 
 char *make_label(void);
-char *remove_substring(char *str, const char *substr);
+//char *asm_cleanup(AsmCtx_t *ctx, char *code);
 
 #endif
